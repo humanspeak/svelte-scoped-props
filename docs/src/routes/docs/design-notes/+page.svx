@@ -1,0 +1,190 @@
+---
+title: Design Notes
+description: Why Svelte Scoped Props exists as an ecosystem proof before proposing compiler support.
+---
+
+# Design Notes
+
+Svelte Scoped Props is a proof vehicle. The goal is to test the shape, tradeoffs, and
+failure modes of `scoped:<prop>` in userland before asking the Svelte team to consider
+anything like it in core.
+
+## TLDR
+
+We still believe the child component should own its styling contract. A child should
+decide which props are class-like, where those props land, and whether a prop named
+`class` even means CSS.
+
+But Svelte works from the parent component's markup and scoped CSS analysis. At the
+point where we can cheaply rewrite a parent call site, we do not have a reliable child
+type graph or child prop contract. So the alpha takes the smallest explicit path:
+
+```svelte
+<ChildCard scoped:class="parent-owned" />
+<FancyCard scoped:internalClass="inner-panel" />
+```
+
+The parent declares, at the usage site, "this value is one of my scoped CSS classes."
+The child still decides what to do with the resulting normal prop.
+
+## Why Test This Outside Core?
+
+An installable package gives us a real place to prove the idea.
+
+- We can test literal values, dynamic `ClassValue`s, aliases, spread forwarding, SSR,
+  and CSS pruning against an actual app.
+- We can find bad edges before proposing language or compiler surface.
+- We can show screenshots, examples, and failing cases instead of asking maintainers
+  to reason from an abstract issue.
+- We can learn whether people actually want this syntax before adding weight to
+  Svelte itself.
+
+Native compiler support would be cleaner than this package. It would already know the
+scope hash, could avoid the marker snippet, and could place runtime helpers without a
+published-package workaround. This package exists to make the case concrete.
+
+## How We Got Here
+
+### Plain component `class` cannot be magical
+
+This is the maintainer mantra around this subject, and this package is designed to
+respect it.
+
+In Svelte, `class` on a component is just a prop. A component can use `class` as CSS,
+as data, or not at all. As a Svelte repo member put it in the `class` attribute
+discussion, the compiler does not know how a component uses a prop named `class`; it
+could mean something completely different.
+
+Automatically treating every component `class` as a scoped CSS handoff would break
+that contract. It would also smuggle new language behavior behind a prop name that
+already belongs to component authors.
+
+That is why plain `class` stays plain:
+
+```svelte
+<ChildCard class="not-automatically-scoped" />
+```
+
+The caller must opt in:
+
+```svelte
+<ChildCard scoped:class="parent-owned" />
+```
+
+#### References
+
+- [Svelte issue #9044 comment](https://github.com/sveltejs/svelte/issues/9044#issuecomment-1653301326) - Svelte repo member explanation that `class` on a component is just a component property, so compiler magic based on the prop name would be risky.
+- [Svelte issue #6972](https://github.com/sveltejs/svelte/issues/6972) - `<style module>` proposal that summarizes the long-running scoped-class problem and notes that special treatment for component `class` had been consistently opposed by maintainers.
+- [Svelte issue #4843](https://github.com/sveltejs/svelte/issues/4843) - Feature request for passing scoped classes to child components without `:global`.
+- [Svelte issue #4281](https://github.com/sveltejs/svelte/issues/4281) - Repro showing parent scoped styles are pruned or do not receive the parent hash when the class is only passed to a child component.
+
+### Child-owned contracts are still the ideal
+
+The clean conceptual model is child-owned: the child exposes class-like props such as
+`class`, `internalClass`, `handleClass`, or `labelClass`, and the parent sends values
+that match that API.
+
+`scoped:<prop>` does not replace that contract. It only marks the parent value as
+needing the parent scope hash before it crosses the component boundary.
+
+### TypeScript alone does not solve this layer
+
+We considered using child prop types to decide whether `class` should be scoped. That
+sounds attractive, but at the transform layer the parent markup is cheap and local,
+while semantic child prop typing requires a project graph.
+
+That would be a lot of machinery for a narrow styling feature, and it would create
+new failure modes around build order, imports, generated declarations, package
+boundaries, and editor/compiler differences.
+
+### Child metadata was too heavy for the first move
+
+Another path was compiler-created child metadata, something like:
+
+```ts
+metadata = {
+    classable: ['class', 'internalClass']
+}
+```
+
+That may be a future direction, but it starts to rebuild part of Svelte's module graph
+around this feature. For an upstream proposal, that is too much to ask before we have
+proof that the authoring model is worth it.
+
+### Spreads only work after intent is explicit
+
+Object spreads cannot contain Svelte directive syntax. This does not work:
+
+```svelte
+<Child {...{ 'scoped:class': 'parent-owned' }} />
+```
+
+The workable rule is: scope first, then spread.
+
+```svelte
+<MiddleChild scoped:class="parent-owned" />
+```
+
+After the transform, the middle child receives a normal prop and can forward it:
+
+```svelte
+<FinalChild {...props} />
+```
+
+### CSS pruning is the userland tax
+
+Svelte's scoped CSS analysis looks for local DOM elements that use a class. A component
+prop does not count, because Svelte cannot know whether the child will apply that prop
+to an element, ignore it, or treat it as non-CSS data.
+
+That means this source can look unused to Svelte:
+
+```svelte
+<ChildCard scoped:class="parent-owned" />
+
+<style>
+    .parent-owned {
+        color: purple;
+    }
+</style>
+```
+
+The preprocessor can rewrite the prop:
+
+```svelte
+<ChildCard class="parent-owned svelte-abc123" />
+```
+
+but the selector still is not attached to a local element in the parent component's
+markup. Outside core, the package has to preserve the parent selector by adding an
+uncalled snippet marker:
+
+```svelte
+{#snippet __svelte_scoped_props_marker()}
+    <div class="parent-owned"></div>
+{/snippet}
+```
+
+The snippet is never called, so that `<div>` never renders. It only gives Svelte's CSS
+analysis a local class usage to see, which keeps the selector alive and lets Svelte add
+the correct scope hash.
+
+That marker is an implementation scar. Native support would already know that
+`scoped:class` is intentionally exporting a parent-scoped class through a component
+prop, so it could preserve the selector directly without the fake snippet.
+
+## What This Alpha Is Trying To Prove
+
+- `scoped:<prop>` is explicit enough to avoid automatic component `class` magic.
+- The child remains the owner of where class-like props are applied.
+- Prop aliases are necessary for real wrapper components.
+- Dynamic `ClassValue` support matters.
+- SSR needs the scoped class in the rendered HTML, not after hydration.
+- Spread forwarding is viable once the parent has already scoped the value.
+- The language boundary is clear: this works in Svelte markup, not arbitrary objects.
+
+## Current Bet
+
+The current bet is that explicit usage-site syntax is the best testable compromise:
+small enough to ship as an ecosystem package, clear enough to discuss with the team,
+and honest about the places where native compiler support would do a better job.

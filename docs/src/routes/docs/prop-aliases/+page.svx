@@ -1,0 +1,42 @@
+---
+title: Prop aliases
+description: Use scoped: with class-like prop aliases such as internalClass.
+---
+
+# Prop aliases
+
+`scoped:` is not limited to `class`. The prop name after `scoped:` is preserved.
+
+```svelte
+<FancyCard scoped:internalClass="inner-panel" />
+```
+
+That becomes:
+
+```svelte
+<FancyCard internalClass="inner-panel svelte-abc123" />
+```
+
+Aliases are useful when a component exposes more than one class-like entry point.
+
+```svelte title="FancyCard.svelte"
+<script lang="ts">
+    import type { ClassValue } from 'svelte/elements'
+
+    interface Props {
+        class?: ClassValue
+        internalClass?: ClassValue
+    }
+
+    let props: Props = $props()
+</script>
+
+<section class={props.class}>
+    <div class={props.internalClass}>
+        <slot />
+    </div>
+</section>
+```
+
+The parent chooses which child prop receives the scoped class. The child still chooses
+where that prop is applied.

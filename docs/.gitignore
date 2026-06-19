@@ -1,0 +1,58 @@
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Paraglide
+src/lib/paraglide
+
+# Generated registry data
+src/lib/generated
+
+# Generated social card images
+static/social-cards/
+static/og-default.png
+static/twitter-default.png
+
+# Generated sitemap manifest
+src/lib/sitemap-manifest.json
+
+# Generated demo manifest (docs-kit's demoManifestPlugin output)
+src/lib/demo-manifest.json
+src/lib/demo-loaders.ts
+src/lib/demo-virtual.d.ts
+
+# Generated GitHub stats (build artifact)
+src/lib/github-stats.json
+
+# Generated per-doc markdown mirrors (LLM citation surface)
+static/docs/
+
+# Generated llms.txt + llms-full.txt (docs-kit's llmsPlugin / llmsFullPlugin —
+# discovery index + concatenated dump for LLM agents)
+static/llms.txt
+static/llms-full.txt
+
+.dev.vars*
+!.dev.vars.example
+.env*
+.env.local

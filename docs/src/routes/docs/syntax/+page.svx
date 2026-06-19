@@ -1,0 +1,62 @@
+---
+title: Syntax
+description: How to use scoped: props on Svelte component tags.
+---
+
+# Syntax
+
+Use `scoped:<propName>` on a component tag when the parent intentionally passes one
+of its scoped CSS classes through a child prop.
+
+```svelte
+<ChildCard scoped:class="parent-owned" />
+<FancyCard scoped:internalClass="inner-panel" />
+```
+
+The directive target is the prop name after `scoped:`.
+
+```svelte
+<FancyCard scoped:internalClass="inner-panel" />
+```
+
+becomes:
+
+```svelte
+<FancyCard internalClass="inner-panel svelte-abc123" />
+```
+
+## Component tags only
+
+Use `scoped:` on components, not native elements.
+
+```svelte
+<ChildCard scoped:class="parent-owned" />
+<motion.div scoped:class="parent-owned" />
+```
+
+Native elements already live in the current component, so normal `class` behavior is
+the right tool.
+
+```svelte
+<div class="parent-owned" />
+```
+
+## Explicit values only
+
+The directive must include a value.
+
+```svelte
+<ChildCard scoped:class="parent-owned" />
+<ChildCard scoped:class={['parent-owned', { active }]} />
+```
+
+## No duplicate target prop
+
+Do not combine `scoped:class` and `class` on the same component.
+
+```svelte
+<!-- Invalid -->
+<ChildCard scoped:class="parent-owned" class="other" />
+```
+
+The transform rejects this because it would be unclear which value should win.

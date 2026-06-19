@@ -1,0 +1,39 @@
+---
+title: SSR
+description: Scoped props are rewritten before Svelte compiles server and client output.
+---
+
+# SSR
+
+Svelte Scoped Props runs before Svelte compiles the component. That means literal
+scoped props are present in the server-rendered HTML.
+
+```svelte
+<ChildCard scoped:class="parent-owned" />
+```
+
+is compiled as if the parent wrote:
+
+```svelte
+<ChildCard class="parent-owned svelte-abc123" />
+```
+
+There is no client effect that waits for hydration to add the parent scope hash. The
+server and client compile from the same transformed source.
+
+## Dynamic values
+
+Dynamic values use the runtime helper on both server and client.
+
+```svelte
+<ChildCard scoped:class={['parent-owned', { active }]} />
+```
+
+The helper is pure string normalization. It does not read the DOM, start observers,
+or wait for the browser.
+
+## Test route
+
+The package includes a visual SvelteKit test page at `/tests/scoped-props` and an SSR
+check route at `/tests/scoped-props/ssr-check`. Those routes are intentionally test
+fixtures, not marketing docs.

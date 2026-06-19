@@ -1,0 +1,101 @@
+@import 'tailwindcss';
+@source '../node_modules/@humanspeak/docs-kit/dist';
+@import '@humanspeak/docs-kit/styles/base.css';
+@import '@humanspeak/docs-kit/styles/brutalist.css';
+@import '@humanspeak/docs-kit/styles/prose-v2.css';
+@plugin '@tailwindcss/typography';
+
+/* ── Project-specific tokens ── */
+:root {
+    /* Success color (copy confirmation, status indicators) */
+    --color-success: #22c55e;
+}
+
+.dark {
+    --color-success: #4ade80;
+}
+
+/* Register project-specific tokens */
+@theme inline {
+    --color-success: var(--color-success);
+}
+
+/* ── Shiki theme switching outside .prose (e.g. ComponentSource) ── */
+@layer base {
+    html:not(.dark) .shiki-dark {
+        display: none;
+    }
+
+    html.dark .shiki-light {
+        display: none;
+    }
+}
+
+/* ── Project-specific: landing page decorative styles ── */
+.orb-a-bg {
+    background: radial-gradient(
+        circle at 30% 30%,
+        color-mix(in oklab, var(--color-brand-100) 40%, transparent),
+        color-mix(in oklab, var(--color-brand-100) 10%, transparent)
+    );
+}
+
+.orb-b-bg {
+    background: radial-gradient(
+        circle at 70% 50%,
+        color-mix(in oklab, var(--color-brand-500) 30%, transparent),
+        color-mix(in oklab, var(--color-brand-500) 8%, transparent)
+    );
+}
+
+@keyframes sheen {
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.sheen-gradient {
+    background-size: 200% 100%;
+    animation: sheen 6s ease-in-out infinite;
+}
+
+.shiny-button {
+    --radial-gradient-background: 250, 250, 250;
+    --solid-color-background: 15, 15, 15;
+    --overlay-color: 255, 255, 255;
+}
+
+/* ── Project-specific: ComponentSource dialog ── */
+.component-source-dialog {
+    @apply fixed inset-4 z-50 flex flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl;
+    max-width: 1100px;
+    max-height: 80vh;
+    margin: auto;
+}
+
+.component-source-code pre.shiki {
+    @apply m-0 rounded-none bg-transparent! p-4;
+    counter-reset: line;
+}
+
+.component-source-code pre.shiki code {
+    @apply bg-transparent!;
+    counter-reset: line;
+}
+
+.component-source-code pre.shiki code .line::before {
+    counter-increment: line;
+    content: counter(line);
+    @apply mr-6 inline-block w-4 text-right text-muted-foreground/50;
+}
+
+/* Code-block header + copy button styling now lives entirely in
+   docs-kit's prose-v2.css (imported above). The bfb95407 commit in
+   docs-kit also wires `animate` / `hover` / `press` from svelte-motion
+   into the copy button, so the prior project-specific CSS transitions
+   on .icon-copy / .icon-check are obsolete — keeping them here would
+   override the motion-driven cross-fade. */

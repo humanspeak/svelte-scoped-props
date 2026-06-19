@@ -1,5 +1,5 @@
 {
-  "name": "svelte-scoped-props",
+  "name": "@humanspeak/svelte-scoped-props",
   "version": "0.1.0-alpha.0",
   "type": "module",
   "description": "Experimental Svelte preprocessor for scoped component class props.",

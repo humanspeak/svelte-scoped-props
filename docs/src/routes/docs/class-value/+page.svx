@@ -1,0 +1,56 @@
+---
+title: ClassValue
+description: Dynamic scoped props support Svelte-style ClassValue inputs.
+---
+
+# ClassValue
+
+Dynamic scoped props accept Svelte-style `ClassValue` inputs: strings, arrays, object
+maps, and falsy entries.
+
+```ts
+import type { ClassValue } from 'svelte/elements'
+```
+
+```svelte
+<script lang="ts">
+    import ChildCard from './ChildCard.svelte'
+
+    let selected = $state(false)
+    const childClass = $derived(['parent-owned', { selected }])
+</script>
+
+<ChildCard scoped:class={childClass} />
+```
+
+The preprocessor turns the expression into a runtime helper call.
+
+```svelte
+<ChildCard class={__svelte_scoped_props_class(childClass, 'svelte-abc123')} />
+```
+
+The helper normalizes the value, removes disabled object-map keys, joins arrays, and
+appends the parent scope hash.
+
+## Typing child props
+
+When a child prop is class-like, type it as `ClassValue`.
+
+```svelte
+<script lang="ts">
+    import type { ClassValue } from 'svelte/elements'
+
+    interface Props {
+        class?: ClassValue
+    }
+
+    let props: Props = $props()
+</script>
+
+<article class={props.class}>
+    Child content
+</article>
+```
+
+That `Props` shape is a child component contract. The preprocessor does not inspect
+the child's TypeScript types.
