@@ -50,6 +50,12 @@ type TagTransformResult = {
   dynamicAttributeCount: number;
 };
 
+type ScopedAttributeScanResult = {
+  scopedAttributeCount: number;
+  dynamicAttributeCount: number;
+  literalClassNames: Set<string>;
+};
+
 const DEFAULT_RUNTIME_MODULE = 'svelte-scoped-props/runtime';
 const RUNTIME_IMPORT_NAME = '__svelte_scoped_props_class';
 
@@ -73,7 +79,21 @@ export function transformScopedProps(
   source: string,
   options: ScopedPropsOptions & { filename?: string } = {}
 ): TransformResult {
-  const css = readStyleContent(source);
+  const scanned = scanScopedAttributes(source);
+  const boostedClassNames = new Set(scanned.literalClassNames);
+
+  if (scanned.dynamicAttributeCount > 0) {
+    for (const className of readCssClassNames(source)) {
+      boostedClassNames.add(className);
+    }
+  }
+
+  const scopedSource =
+    scanned.scopedAttributeCount > 0
+      ? boostScopedStyleSpecificity(source, boostedClassNames)
+      : source;
+
+  const css = readStyleContent(scopedSource);
   const cssHash = options.cssHash ?? defaultCssHash;
   const filename = normalizeFilename(options.filename, options.normalizeFilename);
   const scopeHash = cssHash({
@@ -85,7 +105,7 @@ export function transformScopedProps(
   const runtimeModule = options.runtimeModule ?? DEFAULT_RUNTIME_MODULE;
   const marker = options.marker ?? 'snippet';
 
-  const transformed = transformTags(source, scopeHash);
+  const transformed = transformTags(scopedSource, scopeHash);
   let code = transformed.code;
 
   if (transformed.dynamicAttributeCount > 0) {
@@ -101,6 +121,64 @@ export function transformScopedProps(
     scopedAttributeCount: transformed.scopedAttributeCount,
     dynamicAttributeCount: transformed.dynamicAttributeCount,
     hash: scopeHash
+  };
+}
+
+function scanScopedAttributes(source: string): ScopedAttributeScanResult {
+  let index = 0;
+  let scopedAttributeCount = 0;
+  let dynamicAttributeCount = 0;
+  const literalClassNames = new Set<string>();
+
+  while (index < source.length) {
+    if (source.startsWith('<!--', index)) {
+      index = findCommentEnd(source, index);
+      continue;
+    }
+
+    if (startsWithTag(source, index, 'script') || startsWithTag(source, index, 'style')) {
+      index = findPairedTagEnd(source, index);
+      continue;
+    }
+
+    if (source[index] !== '<' || !isTagNameStart(source[index + 1])) {
+      index += 1;
+      continue;
+    }
+
+    const tag = readOpenTag(source, index);
+
+    if (!tag) {
+      index += 1;
+      continue;
+    }
+
+    if (tag.source.includes('scoped:')) {
+      const tagName = readTagName(tag.source);
+      const attributes = readAttributes(tag.source, tagName.length + 1);
+
+      for (const attribute of attributes) {
+        if (!attribute.name.startsWith('scoped:')) continue;
+
+        scopedAttributeCount += 1;
+
+        if (!attribute.value) continue;
+
+        if (attribute.value.kind === 'expression') {
+          dynamicAttributeCount += 1;
+        } else {
+          addClassNameTokens(literalClassNames, attribute.value.content);
+        }
+      }
+    }
+
+    index = tag.end;
+  }
+
+  return {
+    scopedAttributeCount,
+    dynamicAttributeCount,
+    literalClassNames
   };
 }
 
@@ -511,6 +589,94 @@ function addCssMarkerSnippet(source: string): string {
   const marker = `\n{#snippet ${snippetName}()}<div class="${classes.join(' ')}"></div>{/snippet}\n`;
 
   return `${source}${marker}`;
+}
+
+function boostScopedStyleSpecificity(source: string, classNames: Set<string>): string {
+  if (classNames.size === 0) return source;
+
+  return source.replace(
+    /(<style(?:\s[^>]*)?>)([\s\S]*?)(<\/style>)/gi,
+    (_match, open: string, css: string, close: string) =>
+      `${open}${boostCssSpecificity(css, classNames)}${close}`
+  );
+}
+
+function boostCssSpecificity(css: string, classNames: Set<string>): string {
+  let output = '';
+  let segmentStart = 0;
+  let quote: string | null = null;
+  let inComment = false;
+
+  for (let index = 0; index < css.length; index += 1) {
+    const character = css[index];
+    const previous = css[index - 1];
+
+    if (inComment) {
+      if (previous === '*' && character === '/') {
+        inComment = false;
+      }
+      continue;
+    }
+
+    if (quote) {
+      if (character === quote && previous !== '\\') {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (character === '/' && css[index + 1] === '*') {
+      inComment = true;
+      index += 1;
+      continue;
+    }
+
+    if (character === '"' || character === "'") {
+      quote = character;
+      continue;
+    }
+
+    if (character === '{') {
+      const prelude = css.slice(segmentStart, index);
+      output += boostSelectorPrelude(prelude, classNames);
+      output += character;
+      segmentStart = index + 1;
+      continue;
+    }
+
+    if (character === '}') {
+      output += css.slice(segmentStart, index + 1);
+      segmentStart = index + 1;
+    }
+  }
+
+  return output + css.slice(segmentStart);
+}
+
+function boostSelectorPrelude(prelude: string, classNames: Set<string>): string {
+  if (prelude.trimStart().startsWith('@')) return prelude;
+
+  return prelude.replace(
+    /(?<![\w-])\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)/g,
+    (match, className, offset) => {
+      if (!classNames.has(className)) return match;
+
+      const previous = prelude.slice(Math.max(0, offset - match.length), offset);
+      const next = prelude.slice(offset + match.length, offset + match.length * 2);
+
+      if (previous === match || next === match) return match;
+
+      return `${match}${match}`;
+    }
+  );
+}
+
+function addClassNameTokens(classNames: Set<string>, value: string): void {
+  for (const token of value.split(/\s+/)) {
+    if (token) {
+      classNames.add(token);
+    }
+  }
 }
 
 function uniqueSnippetName(source: string): string {

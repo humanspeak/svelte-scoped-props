@@ -16,6 +16,28 @@ test('literal scoped prop shares the parent hash with a native element', async (
   expect(childHashes).toContain(nativeHashes[0]);
 });
 
+test.describe('initial SSR paint', () => {
+  test.use({ javaScriptEnabled: false });
+
+  test('literal scoped prop paints the child with the parent styles before hydration', async ({
+    page
+  }) => {
+    await page.goto('/tests/scoped-props');
+
+    const firstCase = page.locator('article.case', { hasText: 'Explicit scoped literal prop' });
+    const native = firstCase.locator('.demo-card.parent-owned');
+    const child = firstCase.locator('.child-card.parent-owned');
+
+    await expect(native).toHaveClass(/svelte-/);
+    await expect(child).toHaveClass(/svelte-/);
+
+    const nativeStyles = await computedPaintStyles(native);
+    const childStyles = await computedPaintStyles(child);
+
+    expect(childStyles).toEqual(nativeStyles);
+  });
+});
+
 test('dynamic ClassValue toggles keep the parent scope hash', async ({ page }) => {
   await page.goto('/tests/scoped-props');
 
@@ -49,4 +71,16 @@ async function scopedHashes(locator: import('@playwright/test').Locator) {
   const className = await locator.getAttribute('class');
 
   return (className ?? '').split(/\s+/).filter((name) => name.startsWith('svelte-'));
+}
+
+async function computedPaintStyles(locator: import('@playwright/test').Locator) {
+  return locator.evaluate((element) => {
+    const styles = getComputedStyle(element);
+
+    return {
+      backgroundColor: styles.backgroundColor,
+      borderTopColor: styles.borderTopColor,
+      color: styles.color
+    };
+  });
 }

@@ -5,7 +5,7 @@ import { scopedProps, transformScopedProps } from '../src/index.js';
 
 const filename = '/demo/Parent.svelte';
 const expectedHash = defaultCssHash({
-  css: '.parent-owned{color:purple}',
+  css: '.parent-owned.parent-owned{color:purple}',
   filename,
   hash
 });
@@ -20,6 +20,7 @@ describe('transformScopedProps', () => {
     );
 
     expect(result.code).toContain(`<Child class="parent-owned ${expectedHash}" />`);
+    expect(result.code).toContain('.parent-owned.parent-owned{color:purple}');
     expect(result.code).toContain('{#snippet __svelte_scoped_props_marker()}');
   });
 
@@ -61,7 +62,7 @@ describe('transformScopedProps', () => {
       warningFilter: () => false
     });
 
-    expect(compiled.css?.code).toContain(`.parent-owned.${expectedHash}`);
+    expect(compiled.css?.code).toContain(`.parent-owned.parent-owned.${expectedHash}`);
     expect(compiled.css?.code).not.toContain('(unused) .parent-owned');
   });
 
