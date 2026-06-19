@@ -1,0 +1,65 @@
+name: Publish to NPM
+
+permissions:
+  contents: read
+  id-token: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      dist_tag:
+        description: npm dist-tag to publish under
+        required: true
+        type: choice
+        default: alpha
+        options:
+          - alpha
+          - beta
+          - latest
+      dry_run:
+        description: Run publish without uploading to npm
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  publish:
+    runs-on: blacksmith-2vcpu-ubuntu-2404 # trunk-ignore(actionlint/runner-label)
+    environment: production
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6 # zizmor: ignore[unpinned-uses]
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v6 # zizmor: ignore[unpinned-uses]
+
+      - name: Use Node.js - 24
+        uses: actions/setup-node@v6 # zizmor: ignore[unpinned-uses]
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --config.engine-strict=false
+
+      - name: Run alpha release checks
+        run: pnpm run test:all
+
+      - name: Inspect package contents
+        run: pnpm pack --dry-run
+
+      - name: Dry-run publish
+        if: inputs.dry_run
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: pnpm publish --dry-run --access public --tag "${{ inputs.dist_tag }}" --no-git-checks
+
+      - name: Publish package
+        if: ${{ !inputs.dry_run }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: pnpm publish --provenance --access public --tag "${{ inputs.dist_tag }}" --no-git-checks

@@ -1,0 +1,108 @@
+name: Run tests
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+  pull_request:
+    branches:
+      - main
+      - '!dependabot/**'
+    paths:
+      - e2e/**
+      - src/**
+      - tests/**
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - playwright.config.*
+      - svelte.config.*
+      - tsconfig*.json
+      - vite.config.*
+      - .github/workflows/run-tests.yml
+  workflow_dispatch:
+
+concurrency:
+  group: run-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    runs-on: blacksmith-2vcpu-ubuntu-2404 # trunk-ignore(actionlint/runner-label)
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6 # zizmor: ignore[unpinned-uses]
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - uses: pnpm/action-setup@v6 # zizmor: ignore[unpinned-uses]
+
+      - name: Use Node.js - 24
+        uses: actions/setup-node@v6 # zizmor: ignore[unpinned-uses]
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --config.engine-strict=false
+
+      - name: Run unit tests
+        run: pnpm run test:unit
+
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4 # zizmor: ignore[unpinned-uses]
+        with:
+          name: unit-test-results
+          path: |
+            coverage/**
+            test-results/**
+            junit-vitest.xml
+          if-no-files-found: ignore
+          retention-days: 7
+
+  e2e-tests:
+    needs: unit-tests
+    runs-on: blacksmith-4vcpu-ubuntu-2404 # trunk-ignore(actionlint/runner-label)
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6 # zizmor: ignore[unpinned-uses]
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - uses: pnpm/action-setup@v6 # zizmor: ignore[unpinned-uses]
+
+      - name: Use Node.js - 24
+        uses: actions/setup-node@v6 # zizmor: ignore[unpinned-uses]
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --config.engine-strict=false
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run e2e tests
+        env:
+          CI: true
+        run: pnpm run test:e2e
+
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4 # zizmor: ignore[unpinned-uses]
+        with:
+          name: playwright-artifacts
+          path: |
+            playwright-report/**
+            test-results/**
+            blob-report/**
+            junit-playwright.xml
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,14 @@
+name: Cloudflare Workers - Deploy
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+
+jobs:
+  not-yet-wired:
+    runs-on: blacksmith-2vcpu-ubuntu-2404 # trunk-ignore(actionlint/runner-label)
+    steps:
+      - name: Docs deploy placeholder
+        run: echo "Docs are intentionally not wired for the alpha package yet."

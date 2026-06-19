@@ -1,0 +1,56 @@
+{
+  "name": "svelte-scoped-props",
+  "version": "0.1.0-alpha.0",
+  "type": "module",
+  "description": "Experimental Svelte preprocessor for scoped component class props.",
+  "license": "MIT",
+  "packageManager": "pnpm@11.7.0",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "default": "./dist/runtime.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE.md",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "tag": "alpha"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "check": "pnpm run build && pnpm run test:unit && pnpm run test:pages:build",
+    "dev": "pnpm run build && pnpm run sync && vite dev --host 127.0.0.1",
+    "preview": "vite preview --host 127.0.0.1",
+    "prepublishOnly": "pnpm run build && pnpm run test:unit",
+    "test": "pnpm run test:unit",
+    "test:all": "pnpm run check && pnpm run test:e2e",
+    "test:e2e": "playwright test",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report",
+    "sync": "svelte-kit sync",
+    "test:pages:build": "pnpm run build && pnpm run sync && vite build",
+    "test:unit": "pnpm run build && pnpm run sync && vitest run"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@sveltejs/adapter-auto": "^7.0.1",
+    "@sveltejs/kit": "^2.61.1",
+    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "@types/node": "^26.0.0",
+    "svelte": "^5.55.5",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.12",
+    "vitest": "^4.0.0"
+  }
+}

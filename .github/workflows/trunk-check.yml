@@ -1,0 +1,14 @@
+name: Trunk Code Quality Check
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+
+jobs:
+  not-yet-wired:
+    runs-on: blacksmith-2vcpu-ubuntu-2404 # trunk-ignore(actionlint/runner-label)
+    steps:
+      - name: Trunk placeholder
+        run: echo "Trunk is intentionally not wired for the alpha package yet."
