@@ -27,6 +27,12 @@ type graph or child prop contract. So the alpha takes the smallest explicit path
 The parent declares, at the usage site, "this value is one of my scoped CSS classes."
 The child still decides what to do with the resulting normal prop.
 
+There are now two companion artifacts for reviewing the idea: a
+[live proof page](https://poc-scoped-svelte-page.humanspeak.workers.dev) that shows the
+cases running, including SSR, and a
+[Svelte fork PR](https://github.com/humanspeak/svelte/pull/1) that sketches what native
+compiler support could look like.
+
 ## Why Test This Outside Core?
 
 An installable package gives us a real place to prove the idea.
