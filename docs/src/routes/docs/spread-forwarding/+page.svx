@@ -1,0 +1,51 @@
+---
+title: Spread forwarding
+description: Scope a prop before spreading it through intermediate components.
+---
+
+# Spread forwarding
+
+`scoped:` is syntax, not object data. That means scoped intent must be expressed in
+markup before a spread object exists.
+
+```svelte title="Parent.svelte"
+<MiddleChild scoped:class="parent-owned" />
+```
+
+After the preprocessor runs, the middle component receives a normal `class` prop with
+the parent hash attached.
+
+```svelte title="MiddleChild.svelte"
+<script lang="ts">
+    let props = $props()
+</script>
+
+<FinalChild {...props} />
+```
+
+```svelte title="FinalChild.svelte"
+<script lang="ts">
+    import type { ClassValue } from 'svelte/elements'
+
+    interface Props {
+        class?: ClassValue
+    }
+
+    let props: Props = $props()
+</script>
+
+<article class={props.class}>
+    Forwarded child
+</article>
+```
+
+## What does not work
+
+There is no object-spread equivalent of `scoped:class`.
+
+```svelte
+<!-- Invalid idea -->
+<MiddleChild {...{ 'scoped:class': 'parent-owned' }} />
+```
+
+Scope before spread. Once transformed, the prop can be forwarded normally.

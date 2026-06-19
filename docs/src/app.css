@@ -1,0 +1,376 @@
+@import 'tailwindcss';
+@source '../node_modules/@humanspeak/docs-kit/dist';
+@import '@humanspeak/docs-kit/styles/base.css';
+@import '@humanspeak/docs-kit/styles/brutalist.css';
+@import '@humanspeak/docs-kit/styles/prose-v2.css';
+@plugin '@tailwindcss/typography';
+
+/* ── Project-specific tokens ── */
+:root {
+    /* Success color (copy confirmation, status indicators) */
+    --color-success: #22c55e;
+}
+
+.dark {
+    --color-success: #4ade80;
+}
+
+/* Register project-specific tokens */
+@theme inline {
+    --color-success: var(--color-success);
+}
+
+/* ── Scoped props proof examples ── */
+.scoped-proof {
+    --proof-surface: color-mix(in oklab, var(--brut-bg-2) 88%, var(--brut-bg));
+    --proof-card-bg: color-mix(in oklab, var(--brut-bg) 86%, var(--brut-bg-2));
+    --proof-card-soft: color-mix(in oklab, var(--brut-bg-2) 78%, var(--brut-bg));
+    --proof-card-border: var(--brut-rule-2);
+    --proof-card-ink: var(--brut-ink);
+    --proof-card-muted: var(--brut-ink-2);
+    --proof-code-bg: color-mix(in oklab, var(--brut-bg-2) 82%, var(--brut-rule));
+    --proof-code-ink: var(--brut-ink);
+    --proof-source-code-bg: color-mix(in oklab, var(--brut-bg) 72%, var(--brut-bg-2));
+    --proof-source-code-border: color-mix(in oklab, var(--brut-rule-2) 62%, transparent);
+    --proof-success: var(--color-success, #22c55e);
+    --proof-danger: #f43f5e;
+    --proof-pass-bg: color-mix(in oklab, var(--proof-success) 22%, var(--brut-bg));
+    --proof-fail-bg: color-mix(in oklab, var(--proof-danger) 24%, var(--brut-bg));
+    --proof-parent-bg: color-mix(in oklab, pink 82%, white);
+    --proof-parent-ink: color-mix(in oklab, purple 84%, black);
+    --proof-parent-border: color-mix(in oklab, purple 82%, hotpink);
+    --proof-parent-code-bg: color-mix(in oklab, white 82%, pink);
+    --proof-parent-code-ink: var(--proof-parent-ink);
+    --proof-source-row-height: 92px;
+
+    width: 100%;
+    min-height: 0;
+    display: grid;
+    gap: 18px;
+    align-items: stretch;
+    justify-content: stretch;
+    padding: clamp(16px, 3vw, 24px);
+    border: 1px solid var(--brut-rule, #111);
+    border-radius: 6px;
+    background: var(--proof-surface);
+    box-shadow: 4px 4px 0 var(--brut-rule, #111);
+}
+
+html.dark .scoped-proof {
+    --proof-source-code-bg: color-mix(in oklab, var(--brut-bg-2) 58%, black);
+    --proof-source-code-border: color-mix(in oklab, var(--brut-rule-2) 82%, var(--brut-accent) 18%);
+    --proof-parent-bg: color-mix(in oklab, purple 28%, var(--brut-bg));
+    --proof-parent-ink: color-mix(in oklab, pink 86%, white);
+    --proof-parent-border: color-mix(in oklab, hotpink 68%, purple);
+    --proof-parent-code-bg: color-mix(in oklab, purple 36%, var(--brut-bg));
+    --proof-parent-code-ink: color-mix(in oklab, pink 92%, white);
+}
+
+.scoped-proof .render-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 12px;
+    align-items: stretch;
+}
+
+.scoped-proof .render-example {
+    display: grid;
+    grid-template-rows: auto minmax(116px, 1fr);
+    gap: 8px;
+    min-width: 0;
+}
+
+.scoped-proof .render-example > :not(.example-label) {
+    height: 100%;
+}
+
+.scoped-proof .example-label {
+    color: var(--proof-card-muted);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.scoped-proof .demo-card {
+    min-height: 116px;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    border: 2px dashed var(--proof-card-border);
+    border-radius: 6px;
+    color: var(--proof-card-ink);
+    text-align: center;
+    background: var(--proof-card-bg);
+}
+
+.scoped-proof .example-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 12px;
+}
+
+.scoped-proof .example-block {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid color-mix(in oklab, var(--brut-rule, #111) 22%, transparent);
+    border-radius: 6px;
+    background: var(--proof-card-soft);
+}
+
+.scoped-proof code {
+    min-width: 0;
+    width: fit-content;
+    max-width: 100%;
+    padding: 2px 5px;
+    border-radius: 4px;
+    overflow-wrap: anywhere;
+    background: var(--proof-code-bg);
+    color: var(--proof-code-ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.9em;
+}
+
+.scoped-proof .example-block > code {
+    display: grid;
+    width: 100%;
+    min-height: var(--proof-source-row-height);
+    align-items: center;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border: 1px solid color-mix(in oklab, var(--proof-source-code-border) 76%, transparent);
+    border-left: 4px solid var(--proof-source-code-border);
+    border-radius: 2px;
+    background: var(--proof-source-code-bg);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--brut-bg) 52%, transparent);
+    line-height: 1.4;
+}
+
+.scoped-proof .parent-owned code {
+    border: 1px solid color-mix(in oklab, var(--proof-parent-border) 42%, transparent);
+    background: var(--proof-parent-code-bg);
+    color: var(--proof-parent-code-ink);
+}
+
+.scoped-proof .result-list {
+    display: grid;
+    gap: 8px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.scoped-proof .result-list li {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    min-height: var(--proof-source-row-height);
+    padding: 8px;
+    border-left: 4px solid var(--proof-success);
+    background: var(--proof-card-bg);
+}
+
+.scoped-proof .result-list li.missing {
+    border-left-color: var(--proof-danger);
+}
+
+.scoped-proof .result-list strong {
+    color: var(--proof-card-ink);
+    font-size: 0.82rem;
+}
+
+.scoped-proof .comparison-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.scoped-proof .comparison-head,
+.scoped-proof .comparison-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.scoped-proof .comparison-cell {
+    display: grid;
+    gap: 6px;
+    align-content: center;
+    min-width: 0;
+    min-height: var(--proof-source-row-height);
+    padding: 12px;
+    background: var(--proof-card-bg);
+}
+
+.scoped-proof .comparison-source {
+    border: 1px solid color-mix(in oklab, var(--proof-source-code-border) 76%, transparent);
+    border-left: 4px solid var(--proof-source-code-border);
+    border-radius: 2px;
+    background: var(--proof-source-code-bg);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--brut-bg) 52%, transparent);
+}
+
+.scoped-proof .comparison-result {
+    border-left: 4px solid var(--proof-success);
+}
+
+.scoped-proof .comparison-boundary {
+    border-left-color: color-mix(in oklab, var(--proof-card-muted) 68%, var(--proof-source-code-border));
+}
+
+.scoped-proof .comparison-cell span {
+    color: var(--proof-card-ink);
+    font-weight: 800;
+}
+
+.scoped-proof .comparison-cell strong {
+    color: var(--proof-card-ink);
+    font-size: 0.82rem;
+}
+
+.scoped-proof .comparison-source code {
+    display: block;
+    width: 100%;
+    background: transparent;
+    padding: 0;
+}
+
+.scoped-proof .toggle-row {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--brut-rule, #111);
+    border-radius: 6px;
+    background: var(--proof-card-bg);
+    color: var(--proof-card-ink);
+    font-size: 0.95rem;
+}
+
+.scoped-proof .toggle-row input {
+    width: 16px;
+    height: 16px;
+}
+
+.scoped-proof pre {
+    max-height: 280px;
+    margin: 0;
+    padding: 12px;
+    overflow: auto;
+    border: 1px solid color-mix(in oklab, var(--brut-rule, #111) 22%, transparent);
+    border-radius: 6px;
+    background: color-mix(in oklab, var(--brut-bg) 62%, black);
+    color: var(--brut-ink);
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+    .scoped-proof .comparison-head {
+        display: none;
+    }
+
+    .scoped-proof .comparison-row {
+        grid-template-columns: 1fr;
+    }
+
+    .scoped-proof .comparison-source::before {
+        content: 'Source';
+    }
+
+    .scoped-proof .comparison-result::before {
+        content: 'Current result';
+    }
+
+    .scoped-proof .comparison-source::before,
+    .scoped-proof .comparison-result::before {
+        color: var(--proof-card-muted);
+        font-size: 0.76rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+}
+
+/* ── Shiki theme switching outside .prose (e.g. ComponentSource) ── */
+@layer base {
+    html:not(.dark) .shiki-dark {
+        display: none;
+    }
+
+    html.dark .shiki-light {
+        display: none;
+    }
+}
+
+/* ── Project-specific: landing page decorative styles ── */
+.orb-a-bg {
+    background: radial-gradient(
+        circle at 30% 30%,
+        color-mix(in oklab, var(--color-brand-100) 40%, transparent),
+        color-mix(in oklab, var(--color-brand-100) 10%, transparent)
+    );
+}
+
+.orb-b-bg {
+    background: radial-gradient(
+        circle at 70% 50%,
+        color-mix(in oklab, var(--color-brand-500) 30%, transparent),
+        color-mix(in oklab, var(--color-brand-500) 8%, transparent)
+    );
+}
+
+@keyframes sheen {
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.sheen-gradient {
+    background-size: 200% 100%;
+    animation: sheen 6s ease-in-out infinite;
+}
+
+.shiny-button {
+    --radial-gradient-background: 250, 250, 250;
+    --solid-color-background: 15, 15, 15;
+    --overlay-color: 255, 255, 255;
+}
+
+/* ── Project-specific: ComponentSource dialog ── */
+.component-source-dialog {
+    @apply fixed inset-4 z-50 flex flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl;
+    max-width: 1100px;
+    max-height: 80vh;
+    margin: auto;
+}
+
+.component-source-code pre.shiki {
+    @apply m-0 rounded-none bg-transparent! p-4;
+    counter-reset: line;
+}
+
+.component-source-code pre.shiki code {
+    @apply bg-transparent!;
+    counter-reset: line;
+}
+
+.component-source-code pre.shiki code .line::before {
+    counter-increment: line;
+    content: counter(line);
+    @apply mr-6 inline-block w-4 text-right text-muted-foreground/50;
+}
+
+/* Code-block header + copy button styling now lives entirely in
+   docs-kit's prose-v2.css (imported above). The bfb95407 commit in
+   docs-kit also wires `animate` / `hover` / `press` from svelte-motion
+   into the copy button, so the prior project-specific CSS transitions
+   on .icon-copy / .icon-check are obsolete — keeping them here would
+   override the motion-driven cross-fade. */

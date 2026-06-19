@@ -1,0 +1,69 @@
+---
+title: Limits
+description: Current alpha constraints and design boundaries for Svelte Scoped Props.
+---
+
+# Limits
+
+Svelte Scoped Props is an experiment. These boundaries are intentional for the alpha.
+
+## Not a Svelte core feature
+
+The package is a preprocessor that runs before Svelte parses the component. Native
+compiler support would have access to Svelte's already-computed CSS scope hash and
+would not need to mirror private hash behavior.
+
+## Private hash mirror
+
+Svelte does not currently export its default `cssHash` helper as a public API. This
+package mirrors that implementation. If Svelte changes the private default hash,
+projects should update this package or pass their own `cssHash`.
+
+```ts
+scopedProps({
+    cssHash: ({ css, filename, hash }) => `svelte-${hash(filename ?? css)}`
+})
+```
+
+## No child type graph
+
+The preprocessor does not inspect the imported child component or its TypeScript prop
+types. `scoped:class` is an explicit usage-site decision by the parent.
+
+That keeps the transform small, but it also means `scoped:` cannot automatically know
+which child props are `ClassValue` props.
+
+## Component tags only
+
+Only uppercase and dotted component tags are supported.
+
+```svelte
+<Child scoped:class="parent-owned" />
+<motion.div scoped:class="parent-owned" />
+```
+
+Native elements are rejected because normal Svelte `class` behavior already works
+there.
+
+## Scope before spread
+
+Object spreads cannot express Svelte directive syntax. Use `scoped:` before props are
+collected into an object, then forward the transformed prop normally.
+
+## Marker snippet
+
+By default, the transform adds an uncalled snippet marker so Svelte keeps the parent
+CSS selector alive during CSS analysis. The marker does not render, but it can leave a
+small unused function in compiled output.
+
+```ts
+scopedProps({ marker: false })
+```
+
+Only disable the marker when you are running transform-level tests and are not asking
+Svelte to compile scoped CSS.
+
+## CSS scanning
+
+The alpha scanner is intentionally small. It handles normal class selectors, but it is
+not a full CSS parser. Escaped or highly unusual selector forms may need more work.

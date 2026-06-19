@@ -1,0 +1,178 @@
+---
+title: "Get started with Svelte Scoped Props"
+description: "Use explicit scoped: props to pass parent-scoped Svelte classes through component props."
+---
+
+<script>
+  import { DocHeroCard, getSeoContext } from '@humanspeak/docs-kit'
+
+  const seo = getSeoContext()
+  if (seo) {
+      seo.title = 'Get Started | Docs | Svelte Scoped Props'
+      seo.description = 'Install and configure @humanspeak/svelte-scoped-props, an experimental Svelte preprocessor for explicit parent-scoped component class props.'
+      seo.ogTitle = 'Get Started'
+      seo.ogTagline = 'Pass parent-scoped classes through component props'
+      seo.ogFeatures = ['Explicit Syntax', 'SSR Classes', 'ClassValue Support', 'Prop Aliases']
+      seo.ogSlug = 'docs'
+  }
+</script>
+
+<DocHeroCard
+  figNo="FIG-DOC-001"
+  figLabel="GET STARTED"
+  slug="docs"
+  title="scoped"
+  accent="props"
+  tagline="Svelte Scoped Props is an experimental preprocessor that lets a parent component intentionally pass one of its scoped CSS classes through a child component prop."
+  ctas={[
+    { href: '#install', label: 'install ↗', primary: true },
+    { href: '/tests/scoped-props', label: 'test page' }
+  ]}
+  sheet="SHEET 01 / 01"
+/>
+
+**Svelte Scoped Props** adds an explicit `scoped:<prop>` directive for component props.
+It is for the narrow case where the parent owns a scoped CSS selector, but the element
+that needs the class lives inside a child component.
+
+```svelte
+<ChildCard scoped:class="parent-owned" />
+<MotionBox scoped:class={['panel', { active }]} />
+<FancyCard scoped:internalClass="inner-panel" />
+```
+
+Before Svelte compiles the component, the preprocessor rewrites the directive into a
+normal prop value with the parent component's CSS hash attached.
+
+```svelte
+<ChildCard class="parent-owned svelte-abc123" />
+```
+
+The child still controls what happens next. If it applies `class` to an internal
+element, that internal element receives the parent-scoped class. If it treats `class`
+as data, Svelte Scoped Props does not force it to become CSS.
+
+## Install
+
+```bash
+pnpm add -D @humanspeak/svelte-scoped-props
+```
+
+## Configure Svelte
+
+Add the preprocessor after your style preprocessors so it sees the same CSS Svelte
+will hash.
+
+```ts title="svelte.config.ts"
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
+import { scopedProps } from '@humanspeak/svelte-scoped-props'
+
+export default {
+    preprocess: [
+        vitePreprocess(),
+        scopedProps({
+            runtimeModule: '@humanspeak/svelte-scoped-props/runtime'
+        })
+    ]
+}
+```
+
+The `runtimeModule` option points dynamic `ClassValue` props at the published scoped
+package runtime. Literal props do not import the runtime helper.
+
+## First scoped prop
+
+```svelte title="Parent.svelte"
+<script lang="ts">
+    import ChildCard from './ChildCard.svelte'
+</script>
+
+<ChildCard scoped:class="parent-owned" />
+
+<style>
+    .parent-owned {
+        color: purple;
+    }
+</style>
+```
+
+```svelte title="ChildCard.svelte"
+<script lang="ts">
+    import type { ClassValue } from 'svelte/elements'
+
+    interface Props {
+        class?: ClassValue
+    }
+
+    let props: Props = $props()
+</script>
+
+<article class={props.class}>
+    Child content
+</article>
+```
+
+The class is authored in `Parent.svelte`, but the child can decide where it lands.
+The generated prop contains the parent scope hash, so the parent style can match the
+child's internal element.
+
+## Dynamic values
+
+Dynamic scoped props accept the same `ClassValue` shapes used by Svelte class
+attributes: strings, arrays, and object maps.
+
+```svelte
+<script lang="ts">
+    import ChildCard from './ChildCard.svelte'
+
+    let active = $state(true)
+    const classes = $derived(['parent-owned', { active }])
+</script>
+
+<ChildCard scoped:class={classes} />
+```
+
+The preprocessor routes dynamic values through a tiny runtime helper that normalizes
+the value and appends the scope hash.
+
+## Prop aliases
+
+The prop name comes after `scoped:`.
+
+```svelte
+<FancyCard scoped:internalClass="inner-panel" />
+```
+
+That rewrites to an `internalClass` prop. The child can expose whatever class-like
+prop names make sense for its API.
+
+## Spread forwarding
+
+`scoped:` intent must be expressed before a spread object exists.
+
+```svelte
+<MiddleChild scoped:class="parent-owned" />
+```
+
+After the preprocessor rewrites the prop, a middle component can forward it like any
+other prop.
+
+```svelte
+<script lang="ts">
+    let props = $props()
+</script>
+
+<FinalChild {...props} />
+```
+
+A raw object spread cannot contain `scoped:` syntax, so scope first and spread later.
+
+## What this is not
+
+- It is not a Svelte core feature.
+- It does not make every component `class` prop special.
+- It does not inspect child component TypeScript types.
+- It does not cross language boundaries where Svelte markup is no longer available.
+
+For the full package surface, see the [API Reference](/docs/api-reference). For the
+current caveats, see [Limits](/docs/limits).

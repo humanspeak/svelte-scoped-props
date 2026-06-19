@@ -1,0 +1,249 @@
+---
+title: API Reference
+description: Reference for the Svelte Scoped Props preprocessor, transform helper, runtime helper, options, and diagnostics.
+---
+
+<script>
+  import { getSeoContext } from '@humanspeak/docs-kit'
+
+  const seo = getSeoContext()
+  if (seo) {
+      seo.title = 'API Reference | Docs | Svelte Scoped Props'
+      seo.description = 'Reference for @humanspeak/svelte-scoped-props exports, options, transform output, runtime helper, and compile-time diagnostics.'
+      seo.ogTitle = 'API Reference'
+      seo.ogTagline = 'Preprocessor, transform helper, runtime, and diagnostics'
+      seo.ogFeatures = ['scopedProps()', 'transformScopedProps()', 'ClassValue Runtime', 'Compile Diagnostics']
+      seo.ogSlug = 'docs-api-reference'
+  }
+</script>
+
+# API Reference
+
+`@humanspeak/svelte-scoped-props` exports a Svelte preprocessor, a low-level transform
+helper for tests and tooling, and a tiny runtime helper for dynamic `ClassValue`
+props.
+
+## Scoped Props
+
+```ts
+import { scopedProps } from '@humanspeak/svelte-scoped-props'
+
+scopedProps(options?: ScopedPropsOptions): PreprocessorGroup
+```
+
+Use this in `svelte.config.ts`.
+
+```ts title="svelte.config.ts"
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
+import { scopedProps } from '@humanspeak/svelte-scoped-props'
+
+export default {
+    preprocess: [
+        vitePreprocess(),
+        scopedProps({
+            runtimeModule: '@humanspeak/svelte-scoped-props/runtime'
+        })
+    ]
+}
+```
+
+Put `scopedProps()` after CSS preprocessors. It computes the same default Svelte CSS
+hash from the final style content, so transformed class props and Svelte's compiled
+CSS selectors agree.
+
+## Transform Scoped Props
+
+```ts
+import { transformScopedProps } from '@humanspeak/svelte-scoped-props'
+
+transformScopedProps(
+    source: string,
+    options?: ScopedPropsOptions & { filename?: string }
+): TransformResult
+```
+
+Use this directly in unit tests, codemods, and small transform experiments.
+
+```ts
+const result = transformScopedProps(
+    `<Child scoped:class="parent-owned" /><style>.parent-owned{color:purple}</style>`,
+    { filename: 'src/Parent.svelte' }
+)
+
+console.log(result.code)
+console.log(result.scopedAttributeCount)
+console.log(result.dynamicAttributeCount)
+console.log(result.hash)
+```
+
+`TransformResult`:
+
+```ts
+type TransformResult = {
+    code: string
+    scopedAttributeCount: number
+    dynamicAttributeCount: number
+    hash: string
+}
+```
+
+## Options
+
+```ts
+type ScopedPropsOptions = {
+    cssHash?: CssHashGetter
+    marker?: false | 'snippet'
+    normalizeFilename?: false | ((filename: string) => string)
+    runtimeModule?: string
+}
+```
+
+### CSS Hash
+
+Provide this when your Svelte config uses a custom `cssHash`.
+
+```ts
+scopedProps({
+    cssHash: ({ css, filename, hash }) => `my-${hash(filename ?? css)}`
+})
+```
+
+The function receives the same ingredients Svelte's default hash uses: final CSS,
+optional filename, and the package's mirrored Svelte hash helper.
+
+### Marker
+
+Defaults to `'snippet'`.
+
+Svelte removes unused scoped CSS selectors unless it can see the class in the
+component markup. The snippet marker keeps those selectors alive without rendering
+anything.
+
+```ts
+scopedProps({ marker: false })
+```
+
+Disable the marker for transform-only tests where you do not compile the transformed
+component with Svelte.
+
+### Normalize Filename
+
+Defaults to repo-relative POSIX paths for files inside `process.cwd()`. That matches
+the Vite and SvelteKit shape most users see.
+
+```ts
+scopedProps({ normalizeFilename: false })
+```
+
+Use `false` for direct `svelte.compile` experiments that intentionally pass absolute
+filenames.
+
+### Runtime Module
+
+Dynamic values import `scopedClass` from this module.
+
+```ts
+scopedProps({
+    runtimeModule: '@humanspeak/svelte-scoped-props/runtime'
+})
+```
+
+Set this explicitly when testing the published scoped package. Literal scoped props
+do not use the runtime helper.
+
+## Runtime
+
+```ts
+import { scopedClass, type ClassValue } from '@humanspeak/svelte-scoped-props/runtime'
+```
+
+For child component props that are passed directly to a Svelte `class` attribute,
+prefer Svelte's own type:
+
+```ts
+import type { ClassValue } from 'svelte/elements'
+```
+
+The runtime export is useful when you call `scopedClass` directly.
+
+```ts
+type ClassDictionary = Record<string, unknown>
+type ClassArray = ClassValue[]
+type ClassValue =
+    | string
+    | number
+    | boolean
+    | null
+    | undefined
+    | ClassDictionary
+    | ClassArray
+
+function scopedClass(value: ClassValue, hash: string): string
+```
+
+`scopedClass` normalizes strings, arrays, and object maps, then appends the scope hash.
+Falsy values and booleans become an empty string.
+
+## Transform Output
+
+Literal values become normal quoted props.
+
+```svelte
+<Child scoped:class="parent-owned" />
+```
+
+```svelte
+<Child class="parent-owned svelte-abc123" />
+```
+
+Expression values become runtime helper calls.
+
+```svelte
+<Child scoped:class={['parent-owned', { active }]} />
+```
+
+```svelte
+<script>
+    import { scopedClass as __svelte_scoped_props_class } from '@humanspeak/svelte-scoped-props/runtime'
+</script>
+
+<Child class={__svelte_scoped_props_class(['parent-owned', { active }], 'svelte-abc123')} />
+```
+
+Prop aliases are mechanical.
+
+```svelte
+<Child scoped:internalClass="inner-panel" />
+```
+
+```svelte
+<Child internalClass="inner-panel svelte-abc123" />
+```
+
+## Diagnostics
+
+The transform throws early for syntax that would be ambiguous or impossible to make
+safe.
+
+- `scoped:` directives can only be used on component tags, not native elements.
+- `scoped:` must include a prop name, such as `scoped:class`.
+- Modifiers are not supported.
+- The scoped prop must have an explicit value.
+- `scoped:<prop>` cannot be combined with a normal `<prop>` on the same component.
+
+## Component Tags
+
+The transform treats uppercase tags and dotted tags as components.
+
+```svelte
+<Child scoped:class="parent-owned" />
+<motion.div scoped:class="parent-owned" />
+```
+
+Native elements are intentionally rejected.
+
+```svelte
+<div scoped:class="parent-owned" />
+```
+
+Use normal Svelte `class` behavior for native elements.

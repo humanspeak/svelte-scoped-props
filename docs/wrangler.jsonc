@@ -1,0 +1,64 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "svelte-page-scoped",
+    "compatibility_date": "2026-04-21",
+    "compatibility_flags": ["nodejs_als", "nodejs_compat"],
+    "main": ".svelte-kit/cloudflare/_worker.js",
+    "assets": {
+        "directory": ".svelte-kit/cloudflare",
+        "binding": "ASSETS"
+    },
+    "observability": {
+        "enabled": true
+    },
+    "upload_source_maps": true,
+    "version_metadata": {
+        "binding": "CF_VERSION_METADATA"
+    },
+    /**
+     * Smart Placement
+     * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+     */
+    // "placement": { "mode": "smart" }
+    /**
+     * Bindings
+     * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
+     * databases, object storage, AI inference, real-time communication and more.
+     * https://developers.cloudflare.com/workers/runtime-apis/bindings/
+     */
+    /**
+     * Environment Variables
+     * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
+     */
+    "vars": {
+        "PUBLIC_SITE_URL": "https://scoped.svelte.page",
+        "PUBLIC_ENVIRONMENT": "production",
+        "ENVIRONMENT": "production",
+        "NODE_ENV": "production"
+    },
+    "kv_namespaces": [
+        {
+            "binding": "REGISTRY_DOWNLOADS",
+            "id": "a66bf65fcb27412c9b9b6d3951f5bc68",
+            "preview_id": "cac17b9101f644faaf3e88c370050db9"
+        }
+    ]
+    /**
+     * Note: Use secrets to store sensitive data.
+     * https://developers.cloudflare.com/workers/configuration/secrets/
+     */
+    /**
+     * Static Assets
+     * https://developers.cloudflare.com/workers/static-assets/binding/
+     */
+    // "assets": { "directory": "./public/", "binding": "ASSETS" }
+    /**
+     * Service Bindings (communicate between multiple Workers)
+     * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
+     */
+    // "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
+}
