@@ -1,8 +1,15 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  test: {
-    exclude: ['**/node_modules/**', '**/dist/**', '**/.svelte-kit/**', '**/e2e/**', '**/docs/**'],
-    environment: 'node'
-  }
-});
+    test: {
+        exclude: [
+            '**/node_modules/**',
+            '**/dist/**',
+            '**/.svelte-kit/**',
+            '**/e2e/**',
+            '**/docs/**',
+            '**/.trunk/**'
+        ],
+        environment: 'node'
+    }
+})
