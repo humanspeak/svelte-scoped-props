@@ -18,6 +18,7 @@
 <style>
     .middle-card {
         display: grid;
+        grid-template-rows: auto minmax(116px, 1fr);
         gap: 8px;
         padding: 10px;
         border: 1px solid var(--proof-card-border, #d7dee7);
@@ -29,5 +30,9 @@
         color: var(--proof-card-muted, #5d6875);
         font-size: 0.8rem;
         font-weight: 700;
+    }
+
+    .middle-card :global(.grandchild-card) {
+        height: 100%;
     }
 </style>

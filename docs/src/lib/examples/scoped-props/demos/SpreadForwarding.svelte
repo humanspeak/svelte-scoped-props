@@ -1,13 +1,8 @@
 <script lang="ts">
     import MiddleSpreadCard from './components/spread/MiddleSpreadCard.svelte'
-    import ProofCase from '../components/ProofCase.svelte'
 </script>
 
-<ProofCase
-    status="passed"
-    title="Scoped prop through spread forwarding"
-    description="The parent scopes the class before it becomes a normal prop, so a middle component can forward it with a spread."
->
+<article class="scoped-proof passed dk-demo-shell">
     <div class="render-grid">
         <div class="render-example">
             <span class="example-label">Native element</span>
@@ -19,35 +14,50 @@
         </div>
     </div>
 
-    <div class="example-grid">
-        <div class="example-block">
+    <div class="comparison-grid">
+        <div class="comparison-head">
             <span class="example-label">Source</span>
-            <code>&lt;MiddleSpreadCard scoped:class="parent-owned" /&gt;</code>
-            <code>&lt;SpreadGrandchildCard &#123;...forwardedProps&#125; /&gt;</code>
-        </div>
-        <div class="example-block">
             <span class="example-label">Current result</span>
-            <ul class="result-list">
-                <li>
-                    <span>Native element</span>
-                    <code>demo-card parent-owned svelte-parent</code>
-                    <strong>baseline</strong>
-                </li>
-                <li>
-                    <span>Third child</span>
-                    <code>grandchild-card parent-owned svelte-parent svelte-grandchild</code>
-                    <strong>has parent hash</strong>
-                </li>
-            </ul>
+        </div>
+
+        <div class="comparison-row">
+            <div class="comparison-cell comparison-source">
+                <span>Native element</span>
+                <code>&lt;div class="demo-card parent-owned"&gt;</code>
+            </div>
+            <div class="comparison-cell comparison-result">
+                <span>Native element</span>
+                <code>demo-card parent-owned svelte-parent</code>
+                <strong>baseline</strong>
+            </div>
+        </div>
+
+        <div class="comparison-row">
+            <div class="comparison-cell comparison-source">
+                <span>Forwarded scoped prop</span>
+                <code>&lt;MiddleSpreadCard scoped:class="parent-owned" /&gt;</code>
+                <code>&lt;SpreadGrandchildCard &#123;...forwardedProps&#125; /&gt;</code>
+            </div>
+            <div class="comparison-cell comparison-result">
+                <span>Third child</span>
+                <code>grandchild-card parent-owned svelte-parent svelte-grandchild</code>
+                <strong>has parent hash</strong>
+            </div>
+        </div>
+
+        <div class="comparison-row">
+            <div class="comparison-cell comparison-source">
+                <span>Parent spread boundary</span>
+                <code>&lt;MiddleSpreadCard &#123;...propsWithClass&#125; /&gt;</code>
+            </div>
+            <div class="comparison-cell comparison-result comparison-boundary">
+                <span>Still not magic</span>
+                <code>propsWithClass.class = 'parent-owned'</code>
+                <strong>does not express scoped intent at the parent call site</strong>
+            </div>
         </div>
     </div>
-
-    <div class="example-block">
-        <span class="example-label">Still not magic</span>
-        <code>&lt;MiddleSpreadCard &#123;...propsWithClass&#125; /&gt;</code>
-        <span>does not express scoped intent at the parent call site.</span>
-    </div>
-</ProofCase>
+</article>
 
 <style>
     .parent-owned {

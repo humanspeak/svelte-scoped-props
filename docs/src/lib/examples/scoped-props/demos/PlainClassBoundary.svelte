@@ -1,13 +1,8 @@
 <script lang="ts">
     import ChildCard from './components/ChildCard.svelte'
-    import ProofCase from '../components/ProofCase.svelte'
 </script>
 
-<ProofCase
-    status="blocked"
-    title="Plain component class is not scoped"
-    description="A parent-local class passed with plain class remains plain and does not reach the forwarded child root."
->
+<article class="scoped-proof blocked dk-demo-shell">
     <span class="selector-anchor dimmed" hidden aria-hidden="true"></span>
 
     <div class="render-grid">
@@ -43,7 +38,7 @@
             </ul>
         </div>
     </div>
-</ProofCase>
+</article>
 
 <style>
     .dimmed {

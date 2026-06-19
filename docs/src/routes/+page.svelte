@@ -1,19 +1,16 @@
 <script lang="ts">
-    import {
-        motion,
-        AnimatePresence,
-        MotionButton,
-        MotionSpan,
-        type DragInfo
-    } from '@humanspeak/svelte-motion'
+    import { AnimatePresence, MotionButton, MotionSpan } from '@humanspeak/svelte-motion'
     import { HeaderV2, FooterV2, getBreadcrumbContext, getSeoContext } from '@humanspeak/docs-kit'
     import { docsConfig } from '$lib/docs-config'
     import favicon from '$lib/assets/logo.svg'
     import githubStats from '$lib/github-stats.json'
+    import MiddleSpreadCard from '$lib/examples/scoped-props/demos/components/spread/MiddleSpreadCard.svelte'
+    import { describeClass } from '$lib/examples/scoped-props/demos/components/classValue'
     import '@fontsource-variable/inter/index.css'
     import '@fontsource-variable/jetbrains-mono/index.css'
     import posthog from 'posthog-js'
     import type { PageData } from './$types'
+    import type { ClassValue } from '@humanspeak/svelte-scoped-props/runtime'
 
     const { data }: { data: PageData } = $props()
     const packageStats = $derived(data.packageStats)
@@ -110,35 +107,27 @@
         }
     ]
 
-    // ── Drag demo (FIG-002) ──────────────────────────────────────────
-    // Live drag with a visible dragConstraints frame (400 × 240 box
-    // around the card origin). We read x / y from the onDrag callback's
-    // info.offset (the lib writes transform: translate(...) directly to
-    // the element rather than exposing internal motion values), and
-    // derive rotation in $state, applied via the CSS `rotate` property
-    // (independent of the translate transform — browsers composite them).
-    let dragXRead = $state(0)
-    let dragYRead = $state(0)
-    let dragIsActive = $state(false)
-    let dragPeakX = $state(0)
-    let dragPeakY = $state(0)
-    const dragRotRead = $derived(
-        Math.round(Math.max(-12, Math.min(12, (dragXRead / 200) * 12)) * 10) / 10
-    )
+    // ── Spread forwarding demo (FIG-002) ─────────────────────────────
+    type SpreadTone = 'purple' | 'pink' | 'split'
 
-    const onCardDrag = (_event: PointerEvent, info: DragInfo) => {
-        const x = info.offset.x
-        const y = info.offset.y
-        dragXRead = Math.round(x)
-        dragYRead = Math.round(y)
-        if (Math.abs(x) > Math.abs(dragPeakX)) dragPeakX = Math.round(x)
-        if (Math.abs(y) > Math.abs(dragPeakY)) dragPeakY = Math.round(y)
-    }
+    const spreadToneOptions: Array<{ id: SpreadTone; label: string; note: string }> = [
+        { id: 'split', label: 'pink + purple', note: 'combined surface' },
+        { id: 'purple', label: 'purple', note: 'parent tone' },
+        { id: 'pink', label: 'pink', note: 'parent tone' }
+    ]
 
-    const clearDragPeaks = () => {
-        dragPeakX = 0
-        dragPeakY = 0
-    }
+    let spreadTone = $state<SpreadTone>('split')
+    let spreadRaised = $state(true)
+    let spreadFaded = $state(false)
+    let spreadClassValue: ClassValue = $derived([
+        'parent-owned',
+        `tone-${spreadTone}`,
+        {
+            raised: spreadRaised,
+            faded: spreadFaded
+        }
+    ])
+    let spreadPreview = $derived(describeClass(spreadClassValue))
 
     // ── Featured examples (homepage tiles → /examples/<slug>) ────────
     const featuredExamples = [
@@ -365,74 +354,110 @@
             {/each}
         </section>
 
-        <!-- ── FIG-002 · DRAG DEMO ─────────────────────────────────── -->
-        <section class="brut-demo">
+        <!-- ── FIG-002 · SPREAD DEMO ───────────────────────────────── -->
+        <section class="brut-demo spread-demo">
             <div class="lede">
-                <div class="k">FIG-002 / DRAG</div>
-                <h2>drag with <span>spring physics</span>.</h2>
+                <div class="k">FIG-002 / SPREAD</div>
+                <h2>scope before <span>spread</span>.</h2>
                 <p>
-                    Drop drag onto any motion tag and read its motion values live. This demo derives
-                    rotation from horizontal drag offset in component state.
+                    The parent opts in with <code>scoped:class</code>. The middle child only spreads
+                    props, and the third child still receives the parent-owned class.
                 </p>
             </div>
             <div class="panel">
                 <div class="bar">
                     <span
                         ><span class="lbl">file</span> ·
-                        <span class="v">drag.svelte</span></span
+                        <span class="v">spread-forwarding.svelte</span></span
                     >
-                    <span><span class="lbl">x</span> <span class="v">{dragXRead}px</span></span>
-                    <span><span class="lbl">y</span> <span class="v">{dragYRead}px</span></span>
                     <span
-                        ><span class="lbl">rotate</span> <span class="v">{dragRotRead}°</span></span
+                        ><span class="lbl">prop</span> <span class="v">scoped:class</span></span
                     >
-                    <span class="live">
-                        {#if dragIsActive}● ACTIVE{:else}○ IDLE{/if}
-                    </span>
-                    <button class="ctrl" type="button" onclick={clearDragPeaks}
-                        >↻ clear peaks</button
-                    >
+                    <span><span class="lbl">value</span> <span class="v">{spreadPreview}</span></span>
+                    <span><span class="lbl">path</span> <span class="v">parent → middle → third</span></span>
+                    <span class="live">● FORWARDED</span>
                 </div>
-                <div class="stage">
-                    <div class="hint">drag me</div>
-                    <!-- Visible dragConstraints frame: the card's origin (its
-                         centre) is held within this 400 × 240 box. -->
-                    <div class="constraints-box" aria-hidden="true">
-                        <span class="cb-tl">−200, −120</span>
-                        <span class="cb-tr">+200, −120</span>
-                        <span class="cb-bl">−200, +120</span>
-                        <span class="cb-br">+200, +120</span>
-                        <span class="cb-label">dragConstraints · 400 × 240</span>
+                <div class="spread-stage">
+                    <div class="spread-controls">
+                        <div class="control-head">
+                            <span>parent call site</span>
+                            <code>&lt;MiddleSpreadCard scoped:class=&#123;classValue&#125; /&gt;</code>
+                        </div>
+                        <div class="tone-grid" aria-label="Choose parent-owned color">
+                            {#each spreadToneOptions as option (option.id)}
+                                <MotionButton
+                                    type="button"
+                                    class="tone-button {spreadTone === option.id ? 'is-active' : ''}"
+                                    aria-pressed={spreadTone === option.id}
+                                    onclick={() => (spreadTone = option.id)}
+                                    whileTap={{ scale: 0.97 }}
+                                    whileHover={{ y: -2 }}
+                                    transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                                >
+                                    <span>{option.label}</span>
+                                    <small>{option.note}</small>
+                                </MotionButton>
+                            {/each}
+                        </div>
+                        <div class="switch-row">
+                            <MotionButton
+                                type="button"
+                                class="switch-button {spreadRaised ? 'is-active' : ''}"
+                                aria-pressed={spreadRaised}
+                                onclick={() => (spreadRaised = !spreadRaised)}
+                                whileTap={{ scale: 0.97 }}
+                                transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                            >
+                                raised shadow
+                            </MotionButton>
+                            <MotionButton
+                                type="button"
+                                class="switch-button {spreadFaded ? 'is-active' : ''}"
+                                aria-pressed={spreadFaded}
+                                onclick={() => (spreadFaded = !spreadFaded)}
+                                whileTap={{ scale: 0.97 }}
+                                transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                            >
+                                faded state
+                            </MotionButton>
+                        </div>
+                        <div class="class-readout">
+                            <span>ClassValue</span>
+                            <code>{spreadPreview}</code>
+                        </div>
                     </div>
-                    <motion.div
-                        class="drag-card"
-                        drag
-                        dragConstraints={{ left: -200, right: 200, top: -120, bottom: 120 }}
-                        dragElastic={0.18}
-                        dragTransition={{ bounceStiffness: 360, bounceDamping: 24 }}
-                        whileHover={{ scale: 1.02 }}
-                        whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
-                        onDragStart={() => (dragIsActive = true)}
-                        onDrag={onCardDrag}
-                        onDragEnd={() => (dragIsActive = false)}
-                        style="rotate: {dragRotRead}deg"
-                    >
-                        <span class="dc-label">motion.div</span>
-                        <ul class="dc-props">
-                            <li>drag</li>
-                            <li>dragConstraints</li>
-                            <li>dragElastic</li>
-                        </ul>
-                    </motion.div>
+
+                    <div class="spread-flow" aria-label="Spread forwarding path">
+                        <div
+                            class="flow-card parent-node parent-owned"
+                            class:tone-purple={spreadTone === 'purple'}
+                            class:tone-pink={spreadTone === 'pink'}
+                            class:tone-split={spreadTone === 'split'}
+                            class:raised={spreadRaised}
+                            class:faded={spreadFaded}
+                        >
+                            <span class="node-k">01 · native element</span>
+                            <strong>Parent CSS owns this class.</strong>
+                            <code>class="{spreadPreview}"</code>
+                        </div>
+
+                        <div class="flow-hop">
+                            <span>scope hash is already prop data</span>
+                            <b>→</b>
+                        </div>
+
+                        <div class="middle-preview">
+                            <span class="node-k">02 · spread through middle</span>
+                            <MiddleSpreadCard scoped:class={spreadClassValue} />
+                        </div>
+                    </div>
                 </div>
                 <div class="footer">
-                    <div>peak x · <span class="v">{dragPeakX}px</span></div>
-                    <div>peak y · <span class="v">{dragPeakY}px</span></div>
-                    <div>spring · <span class="v">stiff 360 / damp 24</span></div>
-                    <div>elastic · <span class="v">0.18</span></div>
-                    <div>
-                        status · <span class="v accent">{dragIsActive ? 'dragging' : 'idle'}</span>
-                    </div>
+                    <div>syntax · <span class="v accent">scoped:class</span></div>
+                    <div>input · <span class="v">ClassValue</span></div>
+                    <div>middle · <span class="v">spread only</span></div>
+                    <div>third child · <span class="v">gets hash</span></div>
+                    <div>plain spread · <span class="v">not magic</span></div>
                 </div>
             </div>
         </section>
@@ -931,7 +956,7 @@
         letter-spacing: 0;
     }
 
-    /* ── Drag demo (FIG-002) ──────────────────────────────────────── */
+    /* ── Spread demo (FIG-002) ────────────────────────────────────── */
     .brut-demo {
         padding: 28px 24px;
         display: grid;
@@ -942,6 +967,8 @@
     .brut-demo .panel {
         border: 1px solid var(--brut-rule);
         background: var(--brut-bg);
+        min-width: 0;
+        overflow: hidden;
     }
     .brut-demo .panel .bar {
         display: flex;
@@ -954,6 +981,10 @@
         background: var(--brut-bg-2);
         flex-wrap: wrap;
     }
+    .brut-demo .panel .bar > span {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
     .brut-demo .panel .bar .lbl {
         color: var(--brut-ink-3);
     }
@@ -964,135 +995,276 @@
         margin-left: auto;
         color: var(--brut-accent);
     }
-    .brut-demo .panel .ctrl {
-        background: transparent;
+    .brut-demo .lede p code,
+    .brut-demo .panel code {
+        font-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+    }
+    .brut-demo .lede p code {
+        padding: 0 4px;
         border: 1px solid var(--brut-rule);
-        padding: 4px 10px;
-        font-family: inherit;
-        font-size: 11px;
-        color: var(--brut-ink-2);
-        cursor: pointer;
-    }
-    .brut-demo .panel .ctrl:hover {
-        background: var(--brut-bg);
+        background: var(--brut-bg-2);
         color: var(--brut-ink);
+        font-size: 0.92em;
     }
-    .brut-demo .panel .stage {
-        position: relative;
-        height: 420px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
+    .spread-stage {
+        display: grid;
+        grid-template-columns: minmax(240px, 330px) 1fr;
+        min-height: 420px;
         background-image:
             linear-gradient(var(--brut-rule) 1px, transparent 1px),
             linear-gradient(90deg, var(--brut-rule) 1px, transparent 1px);
         background-size: 32px 32px;
         background-position: center center;
     }
-    .brut-demo .panel .stage .hint {
-        position: absolute;
-        bottom: 12px;
-        left: 14px;
+    .spread-controls {
+        display: grid;
+        grid-template-rows: auto auto auto 1fr;
+        gap: 14px;
+        padding: 18px;
+        border-right: 1px solid var(--brut-rule);
+        background: color-mix(in oklab, var(--brut-bg-2) 78%, transparent);
+    }
+    .control-head {
+        display: grid;
+        gap: 8px;
         font-size: 10.5px;
+        color: var(--brut-ink-3);
         letter-spacing: 0.14em;
-        color: var(--brut-ink-3);
+        text-transform: uppercase;
     }
-    /* Visible constraint frame — same dimensions as the dragConstraints
-       passed to motion.div (400 × 240 box centred on the card origin). */
-    .brut-demo .panel .stage .constraints-box {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 400px;
-        height: 240px;
-        transform: translate(-50%, -50%);
-        border: 1px dashed var(--brut-rule-2);
-        pointer-events: none;
-    }
-    .brut-demo .panel .stage .constraints-box span {
-        position: absolute;
-        font-size: 9.5px;
-        letter-spacing: 0.12em;
-        color: var(--brut-ink-3);
-        font-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
-        white-space: nowrap;
-    }
-    .brut-demo .panel .stage .constraints-box .cb-tl {
-        top: -16px;
-        left: -2px;
-    }
-    .brut-demo .panel .stage .constraints-box .cb-tr {
-        top: -16px;
-        right: -2px;
-    }
-    .brut-demo .panel .stage .constraints-box .cb-bl {
-        bottom: -16px;
-        left: -2px;
-    }
-    .brut-demo .panel .stage .constraints-box .cb-br {
-        bottom: -16px;
-        right: -2px;
-    }
-    .brut-demo .panel .stage .constraints-box .cb-label {
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 10px;
-        color: var(--brut-ink-3);
-        opacity: 0.55;
-    }
-    .brut-demo .panel :global(.drag-card) {
-        width: 280px;
-        height: 132px;
-        padding: 14px 18px;
+    .control-head code,
+    .class-readout code {
+        display: block;
+        padding: 10px 12px;
+        border: 1px solid var(--brut-rule);
         background: var(--brut-bg);
-        border: 1px solid var(--brut-accent);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        cursor: grab;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
+        color: var(--brut-ink);
+        font-size: 11px;
+        line-height: 1.45;
+        letter-spacing: 0;
+        text-transform: none;
+        overflow-wrap: anywhere;
+        white-space: normal;
+    }
+    .tone-grid,
+    .switch-row {
+        display: grid;
+        gap: 8px;
+    }
+    .tone-grid {
+        grid-template-columns: 1fr;
+    }
+    .switch-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .spread-controls :global(.tone-button),
+    .spread-controls :global(.switch-button) {
+        appearance: none;
+        border: 1px solid var(--brut-rule);
+        background: var(--brut-bg);
+        color: var(--brut-ink-2);
+        font-family: inherit;
+        cursor: pointer;
+        text-align: left;
+    }
+    .spread-controls :global(.tone-button) {
+        display: grid;
+        gap: 4px;
+        padding: 11px 12px;
+    }
+    .spread-controls :global(.tone-button span) {
+        color: var(--brut-ink);
+        font-size: 12px;
+    }
+    .spread-controls :global(.tone-button small) {
+        color: var(--brut-ink-3);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+    .spread-controls :global(.switch-button) {
+        padding: 9px 10px;
+        text-align: center;
+        font-size: 11px;
+    }
+    .spread-controls :global(.tone-button.is-active),
+    .spread-controls :global(.switch-button.is-active) {
+        border-color: var(--brut-accent);
+        background: var(--brut-accent-soft);
+        color: var(--brut-ink);
+    }
+    .spread-controls :global(.tone-button:focus-visible),
+    .spread-controls :global(.switch-button:focus-visible) {
+        outline: 2px solid var(--brut-accent);
+        outline-offset: 2px;
+    }
+    .class-readout {
+        align-self: end;
+        display: grid;
+        gap: 8px;
+        font-size: 10.5px;
+        color: var(--brut-ink-3);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+    .spread-flow {
+        display: grid;
+        grid-template-columns: minmax(190px, 0.72fr) 110px minmax(260px, 1fr);
+        gap: 16px;
+        align-items: stretch;
+        padding: 22px;
+        min-width: 0;
+    }
+    .flow-card,
+    .middle-preview {
+        min-height: 220px;
+        min-width: 0;
+        display: grid;
+        align-content: center;
         gap: 12px;
-        user-select: none;
-        will-change: transform;
+        padding: 18px;
+        border: 1px solid var(--brut-rule);
+        background: var(--brut-bg);
         box-sizing: border-box;
     }
-    :global(html.dark) .brut-demo .panel :global(.drag-card) {
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    .flow-card {
+        transition:
+            transform 0.22s ease,
+            box-shadow 0.22s ease,
+            opacity 0.22s ease,
+            filter 0.22s ease;
     }
-    .brut-demo .panel :global(.drag-card .dc-label) {
-        font-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
-        font-size: 17px;
+    .flow-card.raised {
+        transform: translate(-2px, -2px);
+    }
+    .flow-card strong {
+        max-width: 280px;
+        font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
+        font-size: 24px;
+        line-height: 1.05;
+        font-weight: 600;
+        letter-spacing: -0.03em;
         color: var(--brut-ink);
-        letter-spacing: -0.02em;
-        line-height: 1;
     }
-    /* Prop chips — small bordered cells for each drag-related prop. Sits
-       below the title and reads as a structured spec rather than a
-       bullet-separated string that overflows the card. */
-    .brut-demo .panel :global(.drag-card .dc-props) {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
-        gap: 4px;
+    .flow-card code {
+        display: inline-block;
+        width: fit-content;
         max-width: 100%;
+        padding: 6px 8px;
+        border: 1px solid var(--proof-code-border, var(--brut-rule));
+        background: var(--proof-code-bg, var(--brut-bg-2));
+        color: var(--proof-code-ink, var(--brut-ink));
+        font-size: 11px;
+        overflow-wrap: anywhere;
+        white-space: normal;
     }
-    .brut-demo .panel :global(.drag-card .dc-props li) {
-        font-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
-        font-size: 9.5px;
+    .node-k {
+        font-size: 10.5px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--brut-ink-3);
+    }
+    .parent-node .node-k {
+        color: var(--proof-card-ink);
+        font-weight: 800;
+        opacity: 0.86;
+    }
+    .flow-hop {
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        gap: 12px;
+        color: var(--brut-ink-3);
+        text-align: center;
+        font-size: 10.5px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+    .flow-hop b {
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--brut-accent);
+        background: var(--brut-accent-soft);
+        color: var(--brut-accent);
+        font-size: 18px;
         line-height: 1;
-        letter-spacing: 0.04em;
-        padding: 4px 6px;
-        border: 1px solid var(--brut-rule);
-        color: var(--brut-ink-2);
-        background: var(--brut-bg-2);
-        white-space: nowrap;
+    }
+    .middle-preview {
+        align-content: stretch;
+    }
+    .middle-preview :global(.middle-card) {
+        height: 100%;
+        border-color: var(--brut-rule);
+        background: color-mix(in oklab, var(--brut-bg-2) 72%, transparent);
+    }
+    .middle-preview :global(.middle-label) {
+        color: var(--brut-ink-3);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+    .middle-preview :global(.grandchild-card) {
+        min-height: 146px;
+    }
+    .parent-owned {
+        --proof-card-bg: color-mix(in oklab, #f9a8d4 54%, var(--brut-bg));
+        --proof-card-border: #db2777;
+        --proof-card-ink: #831843;
+        --proof-card-soft: color-mix(in oklab, #f9a8d4 20%, var(--brut-bg-2));
+        --proof-code-bg: color-mix(in oklab, #831843 88%, black);
+        --proof-code-ink: #fff7fb;
+        --proof-code-border: #f472b6;
+        border-color: #db2777;
+        color: var(--proof-card-ink);
+        background: var(--proof-card-bg);
+    }
+    .tone-purple {
+        --proof-card-bg: color-mix(in oklab, #c084fc 56%, var(--brut-bg));
+        --proof-card-border: #9333ea;
+        --proof-card-ink: #4c1d95;
+        --proof-card-soft: color-mix(in oklab, #c084fc 20%, var(--brut-bg-2));
+        --proof-code-bg: color-mix(in oklab, #4c1d95 90%, black);
+        --proof-code-border: #a855f7;
+        border-color: #9333ea;
+    }
+    .tone-pink {
+        --proof-card-bg: color-mix(in oklab, #f9a8d4 58%, var(--brut-bg));
+        --proof-card-border: #db2777;
+        --proof-card-ink: #831843;
+        --proof-card-soft: color-mix(in oklab, #f9a8d4 20%, var(--brut-bg-2));
+        --proof-code-bg: color-mix(in oklab, #831843 88%, black);
+        --proof-code-border: #f472b6;
+        border-color: #db2777;
+    }
+    .tone-split {
+        --proof-card-bg: linear-gradient(135deg, #f9a8d4 0%, #f0abfc 45%, #c084fc 100%);
+        --proof-card-border: #c026d3;
+        --proof-card-ink: #581c87;
+        --proof-card-soft: color-mix(in oklab, #d946ef 18%, var(--brut-bg-2));
+        --proof-code-bg: color-mix(in oklab, #581c87 90%, black);
+        --proof-code-border: #e879f9;
+        border-color: #c026d3;
+    }
+    .raised {
+        box-shadow:
+            8px 8px 0 color-mix(in oklab, var(--proof-card-border) 56%, transparent),
+            0 16px 30px rgba(0, 0, 0, 0.12);
+    }
+    .faded {
+        opacity: 0.7;
+        filter: saturate(0.76);
+    }
+    :global(html.dark) .parent-owned {
+        --proof-card-ink: #ffe4f1;
+        --proof-code-bg: rgba(0, 0, 0, 0.68);
+        --proof-code-ink: #fff7fb;
+    }
+    :global(html.dark) .raised {
+        box-shadow:
+            8px 8px 0 color-mix(in oklab, var(--proof-card-border) 42%, transparent),
+            0 18px 34px rgba(0, 0, 0, 0.42);
     }
     .brut-demo .panel .footer {
         display: grid;
@@ -1523,6 +1695,24 @@
         .brut-ai .ai-grid {
             grid-template-columns: 1fr;
         }
+        .spread-stage {
+            grid-template-columns: 1fr;
+        }
+        .spread-controls {
+            border-right: 0;
+            border-bottom: 1px solid var(--brut-rule);
+        }
+        .spread-flow {
+            grid-template-columns: 1fr;
+        }
+        .flow-hop {
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            justify-items: center;
+        }
+        .flow-hop b {
+            transform: rotate(90deg);
+        }
         .brut-ai .ai-cell {
             border-right: 0;
             border-bottom: 1px solid var(--brut-rule);
@@ -1566,6 +1756,23 @@
         }
         .brut-stats .s:not(:nth-last-child(-n + 2)) {
             border-bottom: 1px solid var(--brut-rule);
+        }
+        .brut-demo .panel .bar {
+            gap: 10px;
+        }
+        .spread-stage {
+            min-height: auto;
+        }
+        .spread-controls,
+        .spread-flow {
+            padding: 14px;
+        }
+        .switch-row {
+            grid-template-columns: 1fr;
+        }
+        .flow-card,
+        .middle-preview {
+            min-height: 180px;
         }
         .brut-feat .grid,
         .brut-ex .grid {

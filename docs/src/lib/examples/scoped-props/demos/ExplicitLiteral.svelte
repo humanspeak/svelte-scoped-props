@@ -1,13 +1,8 @@
 <script lang="ts">
     import ChildCard from './components/ChildCard.svelte'
-    import ProofCase from '../components/ProofCase.svelte'
 </script>
 
-<ProofCase
-    status="passed"
-    title="Explicit scoped literal prop"
-    description="The browser receives the parent scope class only when the call site opts in."
->
+<article class="scoped-proof passed dk-demo-shell">
     <div class="render-grid">
         <div class="render-example">
             <span class="example-label">Native element</span>
@@ -41,7 +36,7 @@
             </ul>
         </div>
     </div>
-</ProofCase>
+</article>
 
 <style>
     .parent-owned {

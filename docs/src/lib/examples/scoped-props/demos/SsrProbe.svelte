@@ -15,7 +15,7 @@
     }
 
     .demo-card {
-        min-height: 80px;
+        min-height: 116px;
         display: grid;
         place-items: center;
         padding: 14px;

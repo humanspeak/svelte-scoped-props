@@ -1,7 +1,6 @@
 <script lang="ts">
     import type { ClassValue } from '@humanspeak/svelte-scoped-props/runtime'
     import ChildCard from './components/ChildCard.svelte'
-    import ProofCase from '../components/ProofCase.svelte'
 
     let dynamicDimmed = $state(true)
     let dynamicClass: ClassValue = $derived(['parent-owned', { dimmed: dynamicDimmed }])
@@ -11,11 +10,7 @@
     })
 </script>
 
-<ProofCase
-    status="passed"
-    title="Explicit scoped dynamic ClassValue"
-    description="A derived ClassValue updates and the child keeps the parent scope class when scoped:class is used."
->
+<article class="scoped-proof passed dk-demo-shell">
     <label class="toggle-row">
         <input type="checkbox" bind:checked={dynamicDimmed} />
         <span>include <code>dimmed</code> from state</span>
@@ -36,36 +31,52 @@
         </div>
     </div>
 
-    <div class="example-grid">
-        <div class="example-block">
+    <div class="comparison-grid">
+        <div class="comparison-head">
             <span class="example-label">Source</span>
-            <code>let dynamicDimmed = $state(true)</code>
-            <code>$derived(['parent-owned', &#123; dimmed: dynamicDimmed &#125;])</code>
-            <code>$derived(&#123; 'parent-owned': true, dimmed: dynamicDimmed &#125;)</code>
-            <code>&lt;ChildCard scoped:class=&#123;dynamicClass&#125; /&gt;</code>
-        </div>
-        <div class="example-block">
             <span class="example-label">Current result</span>
-            <ul class="result-list">
-                <li>
-                    <span>Native element</span>
-                    <code>demo-card parent-owned{dynamicDimmed ? ' dimmed' : ''} svelte-parent</code>
-                    <strong>{dynamicDimmed ? 'pink and faded' : 'pink'}</strong>
-                </li>
-                <li>
-                    <span>Child component</span>
-                    <code>child-card parent-owned{dynamicDimmed ? ' dimmed' : ''} svelte-parent svelte-child</code>
-                    <strong>has parent hash</strong>
-                </li>
-                <li>
-                    <span>Object class map</span>
-                    <code>child-card parent-owned{dynamicDimmed ? ' dimmed' : ''} svelte-parent svelte-child</code>
-                    <strong>has parent hash</strong>
-                </li>
-            </ul>
+        </div>
+
+        <div class="comparison-row">
+            <div class="comparison-cell comparison-source">
+                <span>Native element</span>
+                <code>dynamicClass = ['parent-owned', &#123; dimmed: dynamicDimmed &#125;]</code>
+                <code>&lt;div class=&#123;['demo-card', dynamicClass]&#125;&gt;</code>
+            </div>
+            <div class="comparison-cell comparison-result">
+                <span>Native element</span>
+                <code>demo-card parent-owned{dynamicDimmed ? ' dimmed' : ''} svelte-parent</code>
+                <strong>{dynamicDimmed ? 'pink and faded' : 'pink'}</strong>
+            </div>
+        </div>
+
+        <div class="comparison-row">
+            <div class="comparison-cell comparison-source">
+                <span>Child component</span>
+                <code>dynamicClass = ['parent-owned', &#123; dimmed: dynamicDimmed &#125;]</code>
+                <code>&lt;ChildCard scoped:class=&#123;dynamicClass&#125; /&gt;</code>
+            </div>
+            <div class="comparison-cell comparison-result">
+                <span>Child component</span>
+                <code>child-card parent-owned{dynamicDimmed ? ' dimmed' : ''} svelte-parent svelte-child</code>
+                <strong>has parent hash</strong>
+            </div>
+        </div>
+
+        <div class="comparison-row">
+            <div class="comparison-cell comparison-source">
+                <span>Object class map</span>
+                <code>dynamicClassMap = &#123; 'parent-owned': true, dimmed: dynamicDimmed &#125;</code>
+                <code>&lt;ChildCard scoped:class=&#123;dynamicClassMap&#125; /&gt;</code>
+            </div>
+            <div class="comparison-cell comparison-result">
+                <span>Object class map</span>
+                <code>child-card parent-owned{dynamicDimmed ? ' dimmed' : ''} svelte-parent svelte-child</code>
+                <strong>has parent hash</strong>
+            </div>
         </div>
     </div>
-</ProofCase>
+</article>
 
 <style>
     .parent-owned {

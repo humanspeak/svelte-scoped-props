@@ -1,6 +1,5 @@
 <script lang="ts">
     import NonClassValueClassCard from './components/NonClassValueClassCard.svelte'
-    import ProofCase from '../components/ProofCase.svelte'
 
     let metadata = {
         label: 'not css',
@@ -8,11 +7,7 @@
     }
 </script>
 
-<ProofCase
-    status="passed"
-    title="Non-ClassValue class prop"
-    description="A prop named class can still be user data, so non-class objects should be preserved."
->
+<article class="scoped-proof passed dk-demo-shell">
     <div class="render-grid">
         <div class="render-example">
             <span class="example-label">Native element</span>
@@ -24,30 +19,39 @@
         </div>
     </div>
 
-    <div class="example-grid">
-        <div class="example-block">
+    <div class="comparison-grid">
+        <div class="comparison-head">
             <span class="example-label">Source</span>
-            <code>type Props = &#123; class?: unknown &#125;</code>
-            <code>let metadata = &#123; label: 'not css', priority: 2 &#125;</code>
-            <code>&lt;NonClassValueClassCard class=&#123;metadata&#125; /&gt;</code>
-        </div>
-        <div class="example-block">
             <span class="example-label">Current result</span>
-            <ul class="result-list">
-                <li>
-                    <span>Native element</span>
-                    <code>demo-card parent-owned svelte-parent</code>
-                    <strong>baseline</strong>
-                </li>
-                <li>
-                    <span>class prop</span>
-                    <code>&#123; label: 'not css', priority: 2 &#125;</code>
-                    <strong>preserved</strong>
-                </li>
-            </ul>
+        </div>
+
+        <div class="comparison-row">
+            <div class="comparison-cell comparison-source">
+                <span>Native element</span>
+                <code>&lt;div class="demo-card parent-owned"&gt;</code>
+            </div>
+            <div class="comparison-cell comparison-result">
+                <span>Native element</span>
+                <code>demo-card parent-owned svelte-parent</code>
+                <strong>baseline</strong>
+            </div>
+        </div>
+
+        <div class="comparison-row">
+            <div class="comparison-cell comparison-source">
+                <span>Non-ClassValue class prop</span>
+                <code>type Props = &#123; class?: unknown &#125;</code>
+                <code>let metadata = &#123; label: 'not css', priority: 2 &#125;</code>
+                <code>&lt;NonClassValueClassCard class=&#123;metadata&#125; /&gt;</code>
+            </div>
+            <div class="comparison-cell comparison-result">
+                <span>class prop</span>
+                <code>&#123; label: 'not css', priority: 2 &#125;</code>
+                <strong>preserved</strong>
+            </div>
         </div>
     </div>
-</ProofCase>
+</article>
 
 <style>
     .parent-owned {
