@@ -11,6 +11,7 @@ allowBuilds:
 minimumReleaseAge: 2880
 minimumReleaseAgeExclude:
   - '@humanspeak/*'
+  - 'svelte'
   - '@types/node@26.0.0'
   - '@vitest/browser@4.1.8'
   - '@vitest/coverage-v8@4.1.8'
