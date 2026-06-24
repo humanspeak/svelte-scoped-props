@@ -9,6 +9,22 @@ plugins:
         - id: trunk
           ref: v1.10.2
           uri: https://github.com/trunk-io/plugins
+# Trunk runs Prettier from an isolated tool install, so include the plugins
+# named by docs/.prettierrc in that install.
+tools:
+    definitions:
+        - name: prettier
+          runtime: node
+          package: prettier
+          shims: [prettier]
+          extra_packages:
+              - prettier-plugin-organize-imports@4.3.0
+              - prettier-plugin-svelte@4.1.1
+              - prettier-plugin-tailwindcss@0.8.0
+              - svelte@5.56.4
+              - tailwindcss@4.3.1
+              - typescript@6.0.3
+          known_good_version: 3.8.4
 # Many linters and tools depend on runtimes - configure them here. (https://docs.trunk.io/runtimes)
 runtimes:
     enabled:
