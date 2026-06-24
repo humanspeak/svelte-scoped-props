@@ -35,12 +35,12 @@ The package rewrites those directives before Svelte parses the file, so the chil
 The package uses a Svelte preprocessor. Install shape:
 
 ```ts
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
-import { scopedProps } from 'svelte-scoped-props';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
+import { scopedProps } from 'svelte-scoped-props'
 
 export default {
-  preprocess: [vitePreprocess(), scopedProps()]
-};
+    preprocess: [vitePreprocess(), scopedProps()]
+}
 ```
 
 `scopedProps()` should run after style preprocessors. Svelte's default CSS hash is based on the filename when available, otherwise the CSS, and CSS preprocessors can change the CSS before hashing.

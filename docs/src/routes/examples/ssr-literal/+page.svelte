@@ -27,7 +27,11 @@
 
 {#snippet code()}
     <CodeReferenceV2
-        samples={demoCodeSamples('scoped-props/demos/SsrLiteral.svelte', 'ssr-literal', 'SsrLiteral.svelte')}
+        samples={demoCodeSamples(
+            'scoped-props/demos/SsrLiteral.svelte',
+            'ssr-literal',
+            'SsrLiteral.svelte'
+        )}
         columns={2}
     />
 {/snippet}

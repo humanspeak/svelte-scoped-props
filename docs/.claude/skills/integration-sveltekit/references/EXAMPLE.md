@@ -178,12 +178,12 @@ For session replay to work correctly, add this to `svelte.config.js`:
 
 ```javascript
 export default {
-  kit: {
-    paths: {
-      relative: false
+    kit: {
+        paths: {
+            relative: false
+        }
     }
-  }
-};
+}
 ```
 
 ## Features demonstrated
@@ -248,16 +248,15 @@ export {};
 ```html
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		%sveltekit.head%
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents">%sveltekit.body%</div>
-	</body>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        %sveltekit.head%
+    </head>
+    <body data-sveltekit-preload-data="hover">
+        <div style="display: contents">%sveltekit.body%</div>
+    </body>
 </html>
-
 ```
 
 ---
@@ -452,29 +451,28 @@ export function getAuthContext(): AuthState {
 
 ```svelte
 <script lang="ts">
-	import { getAuthContext } from '$lib/auth.svelte';
+    import { getAuthContext } from '$lib/auth.svelte'
 
-	const auth = getAuthContext();
+    const auth = getAuthContext()
 </script>
 
 <header class="header">
-	<div class="header-container">
-		<nav>
-			<a href="/">Home</a>
-			{#if auth.user}
-				<a href="/burrito">Burrito</a>
-				<a href="/profile">Profile</a>
-			{/if}
-		</nav>
-		<div class="user-section">
-			{#if auth.user}
-				<span>Welcome, {auth.user.username}</span>
-				<button class="btn-logout" onclick={() => auth.logout()}>Logout</button>
-			{/if}
-		</div>
-	</div>
+    <div class="header-container">
+        <nav>
+            <a href="/">Home</a>
+            {#if auth.user}
+                <a href="/burrito">Burrito</a>
+                <a href="/profile">Profile</a>
+            {/if}
+        </nav>
+        <div class="user-section">
+            {#if auth.user}
+                <span>Welcome, {auth.user.username}</span>
+                <button class="btn-logout" onclick={() => auth.logout()}>Logout</button>
+            {/if}
+        </div>
+    </div>
 </header>
-
 ```
 
 ---
@@ -521,27 +519,26 @@ export async function shutdownPostHog() {
 
 ```svelte
 <script lang="ts">
-	import { AuthState, setAuthContext } from '$lib/auth.svelte';
-	import Header from '$lib/components/Header.svelte';
-	import '../app.css';
+    import { AuthState, setAuthContext } from '$lib/auth.svelte'
+    import Header from '$lib/components/Header.svelte'
+    import '../app.css'
 
-	let { children } = $props();
+    let { children } = $props()
 
-	// Create and provide auth context
-	const auth = new AuthState();
-	setAuthContext(auth);
+    // Create and provide auth context
+    const auth = new AuthState()
+    setAuthContext(auth)
 </script>
 
 <svelte:head>
-	<title>Burrito consideration app</title>
-	<meta name="description" content="Consider the potential of burritos with PostHog analytics" />
+    <title>Burrito consideration app</title>
+    <meta name="description" content="Consider the potential of burritos with PostHog analytics" />
 </svelte:head>
 
 <Header />
 <main>
-	{@render children()}
+    {@render children()}
 </main>
-
 ```
 
 ---
@@ -550,69 +547,66 @@ export async function shutdownPostHog() {
 
 ```svelte
 <script lang="ts">
-	import { getAuthContext } from '$lib/auth.svelte';
+    import { getAuthContext } from '$lib/auth.svelte'
 
-	const auth = getAuthContext();
+    const auth = getAuthContext()
 
-	let username = $state('');
-	let password = $state('');
-	let error = $state('');
+    let username = $state('')
+    let password = $state('')
+    let error = $state('')
 
-	async function handleSubmit(e: Event) {
-		e.preventDefault();
-		error = '';
+    async function handleSubmit(e: Event) {
+        e.preventDefault()
+        error = ''
 
-		try {
-			const success = await auth.login(username, password);
-			if (success) {
-				username = '';
-				password = '';
-			} else {
-				error = 'Please provide both username and password';
-			}
-		} catch (err) {
-			console.error('Login failed:', err);
-			error = 'An error occurred during login';
-		}
-	}
+        try {
+            const success = await auth.login(username, password)
+            if (success) {
+                username = ''
+                password = ''
+            } else {
+                error = 'Please provide both username and password'
+            }
+        } catch (err) {
+            console.error('Login failed:', err)
+            error = 'An error occurred during login'
+        }
+    }
 </script>
 
 <div class="container">
-	{#if auth.user}
-		<h1>Welcome back, {auth.user.username}!</h1>
-		<p>You are now logged in. Check out the navigation to explore features.</p>
-		<ul>
-			<li><a href="/burrito">Consider a burrito</a></li>
-			<li><a href="/profile">View your profile</a></li>
-		</ul>
-	{:else}
-		<h1>Welcome to Burrito consideration app</h1>
-		<p>Sign in to start considering burritos.</p>
+    {#if auth.user}
+        <h1>Welcome back, {auth.user.username}!</h1>
+        <p>You are now logged in. Check out the navigation to explore features.</p>
+        <ul>
+            <li><a href="/burrito">Consider a burrito</a></li>
+            <li><a href="/profile">View your profile</a></li>
+        </ul>
+    {:else}
+        <h1>Welcome to Burrito consideration app</h1>
+        <p>Sign in to start considering burritos.</p>
 
-		<form class="form" onsubmit={handleSubmit}>
-			<div class="form-group">
-				<label for="username">Username:</label>
-				<input type="text" id="username" bind:value={username} required />
-			</div>
+        <form class="form" onsubmit={handleSubmit}>
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" bind:value={username} required />
+            </div>
 
-			<div class="form-group">
-				<label for="password">Password:</label>
-				<input type="password" id="password" bind:value={password} required />
-			</div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" bind:value={password} required />
+            </div>
 
-			{#if error}
-				<p class="error">{error}</p>
-			{/if}
+            {#if error}
+                <p class="error">{error}</p>
+            {/if}
 
-			<button type="submit" class="btn-primary">Sign In</button>
-		</form>
+            <button type="submit" class="btn-primary">Sign In</button>
+        </form>
 
-		<p class="note">
-			Enter any username and password to sign in. This is a demo app.
-		</p>
-	{/if}
+        <p class="note">Enter any username and password to sign in. This is a demo app.</p>
+    {/if}
 </div>
-
 ```
 
 ---
@@ -676,61 +670,60 @@ export const POST: RequestHandler = async ({ request }) => {
 
 ```svelte
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { browser } from '$app/environment';
-	import posthog from 'posthog-js';
-	import { getAuthContext } from '$lib/auth.svelte';
+    import { goto } from '$app/navigation'
+    import { browser } from '$app/environment'
+    import posthog from 'posthog-js'
+    import { getAuthContext } from '$lib/auth.svelte'
 
-	const auth = getAuthContext();
+    const auth = getAuthContext()
 
-	let hasConsidered = $state(false);
+    let hasConsidered = $state(false)
 
-	// Redirect to home if not logged in
-	$effect(() => {
-		if (browser && !auth.user) {
-			goto('/');
-		}
-	});
+    // Redirect to home if not logged in
+    $effect(() => {
+        if (browser && !auth.user) {
+            goto('/')
+        }
+    })
 
-	function handleConsideration() {
-		if (!auth.user) return;
+    function handleConsideration() {
+        if (!auth.user) return
 
-		auth.incrementBurritoConsiderations();
-		hasConsidered = true;
-		setTimeout(() => (hasConsidered = false), 2000);
+        auth.incrementBurritoConsiderations()
+        hasConsidered = true
+        setTimeout(() => (hasConsidered = false), 2000)
 
-		// Capture burrito consideration event with PostHog
-		posthog.capture('burrito_considered', {
-			total_considerations: auth.user.burritoConsiderations,
-			username: auth.user.username
-		});
-	}
+        // Capture burrito consideration event with PostHog
+        posthog.capture('burrito_considered', {
+            total_considerations: auth.user.burritoConsiderations,
+            username: auth.user.username
+        })
+    }
 </script>
 
 <div class="container">
-	{#if auth.user}
-		<h1>Burrito consideration zone</h1>
-		<p>This is where you consider the infinite potential of burritos.</p>
-		<p>Current considerations: <strong>{auth.user.burritoConsiderations}</strong></p>
+    {#if auth.user}
+        <h1>Burrito consideration zone</h1>
+        <p>This is where you consider the infinite potential of burritos.</p>
+        <p>Current considerations: <strong>{auth.user.burritoConsiderations}</strong></p>
 
-		<button class="btn-burrito" onclick={handleConsideration}>
-			I have considered the burrito potential
-		</button>
+        <button class="btn-burrito" onclick={handleConsideration}>
+            I have considered the burrito potential
+        </button>
 
-		{#if hasConsidered}
-			<p class="success">
-				Thank you for your consideration! Count: {auth.user.burritoConsiderations}
-			</p>
-		{/if}
+        {#if hasConsidered}
+            <p class="success">
+                Thank you for your consideration! Count: {auth.user.burritoConsiderations}
+            </p>
+        {/if}
 
-		<div class="note">
-			<p>Each consideration is tracked as a PostHog event with custom properties.</p>
-		</div>
-	{:else}
-		<p>Please log in to consider burritos.</p>
-	{/if}
+        <div class="note">
+            <p>Each consideration is tracked as a PostHog event with custom properties.</p>
+        </div>
+    {:else}
+        <p>Please log in to consider burritos.</p>
+    {/if}
 </div>
-
 ```
 
 ---
@@ -739,57 +732,56 @@ export const POST: RequestHandler = async ({ request }) => {
 
 ```svelte
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { browser } from '$app/environment';
-	import posthog from 'posthog-js';
-	import { getAuthContext } from '$lib/auth.svelte';
+    import { goto } from '$app/navigation'
+    import { browser } from '$app/environment'
+    import posthog from 'posthog-js'
+    import { getAuthContext } from '$lib/auth.svelte'
 
-	const auth = getAuthContext();
+    const auth = getAuthContext()
 
-	// Redirect to home if not logged in
-	$effect(() => {
-		if (browser && !auth.user) {
-			goto('/');
-		}
-	});
+    // Redirect to home if not logged in
+    $effect(() => {
+        if (browser && !auth.user) {
+            goto('/')
+        }
+    })
 
-	function triggerTestError() {
-		try {
-			throw new Error('Test error for PostHog error tracking');
-		} catch (err) {
-			posthog.captureException(err);
-			console.error('Captured error:', err);
-			alert('Error captured and sent to PostHog!');
-		}
-	}
+    function triggerTestError() {
+        try {
+            throw new Error('Test error for PostHog error tracking')
+        } catch (err) {
+            posthog.captureException(err)
+            console.error('Captured error:', err)
+            alert('Error captured and sent to PostHog!')
+        }
+    }
 </script>
 
 <div class="container">
-	{#if auth.user}
-		<h1>User profile</h1>
+    {#if auth.user}
+        <h1>User profile</h1>
 
-		<div class="stats">
-			<h2>Your information</h2>
-			<p><strong>Username:</strong> {auth.user.username}</p>
-			<p><strong>Burrito considerations:</strong> {auth.user.burritoConsiderations}</p>
-		</div>
+        <div class="stats">
+            <h2>Your information</h2>
+            <p><strong>Username:</strong> {auth.user.username}</p>
+            <p><strong>Burrito considerations:</strong> {auth.user.burritoConsiderations}</p>
+        </div>
 
-		<h2 style="margin-top: 2rem;">Error tracking demo</h2>
-		<p>Click the button below to trigger a test error that will be captured by PostHog.</p>
+        <h2 style="margin-top: 2rem;">Error tracking demo</h2>
+        <p>Click the button below to trigger a test error that will be captured by PostHog.</p>
 
-		<button class="btn-primary" onclick={triggerTestError} style="margin-top: 1rem;">
-			Trigger test error (for PostHog)
-		</button>
+        <button class="btn-primary" onclick={triggerTestError} style="margin-top: 1rem;">
+            Trigger test error (for PostHog)
+        </button>
 
-		<div class="note">
-			<p>This demonstrates PostHog's error tracking capabilities.</p>
-			<p>The error will appear in your PostHog error tracking dashboard.</p>
-		</div>
-	{:else}
-		<p>Please log in to view your profile.</p>
-	{/if}
+        <div class="note">
+            <p>This demonstrates PostHog's error tracking capabilities.</p>
+            <p>The error will appear in your PostHog error tracking dashboard.</p>
+        </div>
+    {:else}
+        <p>Please log in to view your profile.</p>
+    {/if}
 </div>
-
 ```
 
 ---
@@ -808,29 +800,28 @@ Disallow:
 ## svelte.config.js
 
 ```js
-import adapter from '@sveltejs/adapter-auto';
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import adapter from '@sveltejs/adapter-auto'
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	// Consult https://svelte.dev/docs/kit/integrations
-	// for more information about preprocessors
-	preprocess: vitePreprocess(),
+    // Consult https://svelte.dev/docs/kit/integrations
+    // for more information about preprocessors
+    preprocess: vitePreprocess(),
 
-	kit: {
-		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
-		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
-		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
-		adapter: adapter(),
-		// Required for PostHog session replay to work correctly with SSR
-		paths: {
-			relative: false
-		}
-	}
-};
+    kit: {
+        // adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
+        // If your environment is not supported, or you settled on a specific environment, switch out the adapter.
+        // See https://svelte.dev/docs/kit/adapters for more information about adapters.
+        adapter: adapter(),
+        // Required for PostHog session replay to work correctly with SSR
+        paths: {
+            relative: false
+        }
+    }
+}
 
-export default config;
-
+export default config
 ```
 
 ---
@@ -848,4 +839,3 @@ export default defineConfig({
 ```
 
 ---
-

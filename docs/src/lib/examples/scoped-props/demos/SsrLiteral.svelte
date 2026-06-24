@@ -32,33 +32,40 @@
         const document = new DOMParser().parseFromString(body, 'text/html')
         const native = document.querySelector('.demo-card')
         const parentHash =
-            Array.from(native?.classList ?? []).find((className) => className.startsWith('svelte-')) ??
-            null
+            Array.from(native?.classList ?? []).find((className) =>
+                className.startsWith('svelte-')
+            ) ?? null
 
-        const cards = Array.from(document.querySelectorAll('.demo-card, .child-card')).map((element) => {
-            const className = element.getAttribute('class') ?? ''
-            const expectedParentHash = element.classList.contains('parent-owned') ? 'present' : 'absent'
-            const hasParentHash = parentHash ? element.classList.contains(parentHash) : false
+        const cards = Array.from(document.querySelectorAll('.demo-card, .child-card')).map(
+            (element) => {
+                const className = element.getAttribute('class') ?? ''
+                const expectedParentHash = element.classList.contains('parent-owned')
+                    ? 'present'
+                    : 'absent'
+                const hasParentHash = parentHash ? element.classList.contains(parentHash) : false
 
-            return {
-                label: getCardLabel(element),
-                className,
-                expectedParentHash,
-                hasParentHash,
-                matchesExpectation: parentHash
-                    ? expectedParentHash === 'present'
-                        ? hasParentHash
-                        : !hasParentHash
-                    : false
+                return {
+                    label: getCardLabel(element),
+                    className,
+                    expectedParentHash,
+                    hasParentHash,
+                    matchesExpectation: parentHash
+                        ? expectedParentHash === 'present'
+                            ? hasParentHash
+                            : !hasParentHash
+                        : false
+                }
             }
-        })
+        )
 
         return { cards, parentHash }
     }
 
     function getResultText(card: SsrCard) {
         if (card.label === 'Native element') {
-            return card.hasParentHash ? 'baseline parent style is present' : 'baseline parent style is missing'
+            return card.hasParentHash
+                ? 'baseline parent style is present'
+                : 'baseline parent style is missing'
         }
 
         if (card.label === 'Child component') {
@@ -67,7 +74,9 @@
                 : 'scoped prop lost the parent style'
         }
 
-        return card.hasParentHash ? 'plain class leaked parent style' : 'plain class stays child-owned'
+        return card.hasParentHash
+            ? 'plain class leaked parent style'
+            : 'plain class stays child-owned'
     }
 
     function formatServerHtml(html: string) {
@@ -96,7 +105,8 @@
                 if (!cancelled) {
                     ssrState = {
                         status: 'error',
-                        message: error instanceof Error ? error.message : 'Could not load SSR output'
+                        message:
+                            error instanceof Error ? error.message : 'Could not load SSR output'
                     }
                 }
             })
@@ -118,11 +128,16 @@
             <div class="boundary-list">
                 <div class="boundary-row">
                     <code>&lt;div class="demo-card parent-owned"&gt;</code>
-                    <span>Native markup establishes the parent-owned style the children are compared against.</span>
+                    <span
+                        >Native markup establishes the parent-owned style the children are compared
+                        against.</span
+                    >
                 </div>
                 <div class="boundary-row">
                     <code>&lt;ChildCard scoped:class="parent-owned" /&gt;</code>
-                    <span>The child root should match that parent-owned style before hydration.</span>
+                    <span
+                        >The child root should match that parent-owned style before hydration.</span
+                    >
                 </div>
                 <div class="boundary-row">
                     <code>&lt;ChildCard class="dimmed" /&gt;</code>
@@ -140,8 +155,8 @@
         <div class="server-panel">
             <span class="example-label">Server check</span>
             <p class="server-note">
-                Svelte generated <code>{ssrState.parentHash ?? 'missing'}</code> for the parent style block.
-                The SSR HTML should include that class only where the call site opted in.
+                Svelte generated <code>{ssrState.parentHash ?? 'missing'}</code> for the parent style
+                block. The SSR HTML should include that class only where the call site opted in.
             </p>
 
             <ul class="result-list ssr-results">

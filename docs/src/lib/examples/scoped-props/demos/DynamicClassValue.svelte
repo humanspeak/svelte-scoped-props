@@ -58,7 +58,9 @@
             </div>
             <div class="comparison-cell comparison-result">
                 <span>Child component</span>
-                <code>child-card parent-owned{dynamicDimmed ? ' dimmed' : ''} svelte-parent svelte-child</code>
+                <code
+                    >child-card parent-owned{dynamicDimmed ? ' dimmed' : ''} svelte-parent svelte-child</code
+                >
                 <strong>has parent hash</strong>
             </div>
         </div>
@@ -66,12 +68,16 @@
         <div class="comparison-row">
             <div class="comparison-cell comparison-source">
                 <span>Object class map</span>
-                <code>dynamicClassMap = &#123; 'parent-owned': true, dimmed: dynamicDimmed &#125;</code>
+                <code
+                    >dynamicClassMap = &#123; 'parent-owned': true, dimmed: dynamicDimmed &#125;</code
+                >
                 <code>&lt;ChildCard scoped:class=&#123;dynamicClassMap&#125; /&gt;</code>
             </div>
             <div class="comparison-cell comparison-result">
                 <span>Object class map</span>
-                <code>child-card parent-owned{dynamicDimmed ? ' dimmed' : ''} svelte-parent svelte-child</code>
+                <code
+                    >child-card parent-owned{dynamicDimmed ? ' dimmed' : ''} svelte-parent svelte-child</code
+                >
                 <strong>has parent hash</strong>
             </div>
         </div>

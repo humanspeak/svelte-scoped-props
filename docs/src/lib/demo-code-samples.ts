@@ -4,12 +4,16 @@ const demoCodeDependencies: Partial<Record<DemoCodeLoaderKey, DemoCodeLoaderKey[
     'scoped-props/demos/ClassValueAlias.svelte': [
         'scoped-props/demos/components/InternalClassCard.svelte'
     ],
-    'scoped-props/demos/DynamicClassValue.svelte': ['scoped-props/demos/components/ChildCard.svelte'],
+    'scoped-props/demos/DynamicClassValue.svelte': [
+        'scoped-props/demos/components/ChildCard.svelte'
+    ],
     'scoped-props/demos/ExplicitLiteral.svelte': ['scoped-props/demos/components/ChildCard.svelte'],
     'scoped-props/demos/NonClassValueClassProp.svelte': [
         'scoped-props/demos/components/NonClassValueClassCard.svelte'
     ],
-    'scoped-props/demos/PlainClassBoundary.svelte': ['scoped-props/demos/components/ChildCard.svelte'],
+    'scoped-props/demos/PlainClassBoundary.svelte': [
+        'scoped-props/demos/components/ChildCard.svelte'
+    ],
     'scoped-props/demos/SpreadForwarding.svelte': [
         'scoped-props/demos/components/spread/MiddleSpreadCard.svelte',
         'scoped-props/demos/components/spread/SpreadGrandchildCard.svelte'

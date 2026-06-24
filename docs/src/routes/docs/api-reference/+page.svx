@@ -20,8 +20,8 @@ description: Reference for the Svelte Scoped Props preprocessor, transform helpe
 # API Reference
 
 `@humanspeak/svelte-scoped-props` exports a Svelte preprocessor, a low-level transform
-helper for tests and tooling, and a tiny runtime helper for dynamic `ClassValue`
-props.
+helper for tests and tooling, an ESLint processor, and a tiny runtime helper for
+dynamic `ClassValue` props.
 
 ## Scoped Props
 
@@ -50,6 +50,34 @@ export default {
 Put `scopedProps()` after CSS preprocessors. It computes the same default Svelte CSS
 hash from the final style content, so transformed class props and Svelte's compiled
 CSS selectors agree.
+
+## ESLint Processor
+
+```ts
+import scopedProps, {
+    createProcessor,
+    processor
+} from '@humanspeak/svelte-scoped-props/eslint'
+
+scopedProps.configs.recommended
+processor
+createProcessor(options?: ScopedPropsOptions): ScopedPropsEslintProcessor
+```
+
+Use this in `eslint.config.js` so `svelte/valid-compile` receives transformed markup
+instead of raw `scoped:` attributes.
+
+```js title="eslint.config.js"
+import svelte from 'eslint-plugin-svelte'
+import scopedProps from '@humanspeak/svelte-scoped-props/eslint'
+
+export default [
+    ...svelte.configs['flat/recommended'],
+    ...scopedProps.configs.recommended
+]
+```
+
+See [ESLint](/docs/eslint) for setup details and location-remapping behavior.
 
 ## Transform Scoped Props
 
