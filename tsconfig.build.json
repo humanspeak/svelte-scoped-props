@@ -17,5 +17,5 @@
     "types": ["node"],
     "verbatimModuleSyntax": true
   },
-  "include": ["src/hash.ts", "src/index.ts", "src/runtime.ts"]
+  "include": ["src/eslint.ts", "src/hash.ts", "src/index.ts", "src/runtime.ts"]
 }
