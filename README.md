@@ -24,12 +24,12 @@ pnpm add -D svelte-scoped-props
 
 ```ts
 // svelte.config.ts
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
-import { scopedProps } from 'svelte-scoped-props';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
+import { scopedProps } from 'svelte-scoped-props'
 
 export default {
-  preprocess: [vitePreprocess(), scopedProps()]
-};
+    preprocess: [vitePreprocess(), scopedProps()]
+}
 ```
 
 Place `scopedProps()` after style preprocessors. The package computes the same default CSS hash Svelte uses, so it needs to see the post-processed CSS.
@@ -40,13 +40,10 @@ Place `scopedProps()` after style preprocessors. The package computes the same d
 
 ```js
 // eslint.config.js
-import svelte from 'eslint-plugin-svelte';
-import scopedProps from '@humanspeak/svelte-scoped-props/eslint';
+import svelte from 'eslint-plugin-svelte'
+import scopedProps from '@humanspeak/svelte-scoped-props/eslint'
 
-export default [
-  ...svelte.configs['flat/recommended'],
-  ...scopedProps.configs.recommended
-];
+export default [...svelte.configs['flat/recommended'], ...scopedProps.configs.recommended]
 ```
 
 Place the scoped props config after the Svelte flat config. ESLint only supports one active processor per file, so this keeps the Svelte parser and rules while the scoped props processor supplies transformed markup. Static values, dynamic `ClassValue` expressions, and scoped aliases use the same transform as the Svelte preprocessor. Parent-side spread objects still cannot express scoped intent; scope the prop before it is spread, then forward the transformed prop normally.
@@ -54,16 +51,16 @@ Place the scoped props config after the Svelte flat config. ESLint only supports
 If you pass custom hash options to the Svelte preprocessor, pass the same options to ESLint:
 
 ```js
-import svelte from 'eslint-plugin-svelte';
-import { createProcessor } from '@humanspeak/svelte-scoped-props/eslint';
+import svelte from 'eslint-plugin-svelte'
+import { createProcessor } from '@humanspeak/svelte-scoped-props/eslint'
 
 export default [
-  ...svelte.configs['flat/recommended'],
-  {
-    files: ['**/*.svelte'],
-    processor: createProcessor({ cssHash })
-  }
-];
+    ...svelte.configs['flat/recommended'],
+    {
+        files: ['**/*.svelte'],
+        processor: createProcessor({ cssHash })
+    }
+]
 ```
 
 ## Alpha Test Pages

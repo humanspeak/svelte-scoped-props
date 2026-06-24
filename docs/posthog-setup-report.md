@@ -11,18 +11,18 @@ proxy, error tracking, and the main docs/example conversion events.
 - **Environment variables** written to `.env.local`: `PUBLIC_POSTHOG_PROJECT_TOKEN`, `PUBLIC_POSTHOG_HOST`.
 - **New events added this run**: `examples_index_viewed` (examples index page) plus the scoped-props docs and source exploration events.
 
-| Event | Description | File |
-|---|---|---|
-| `get_started_clicked` | User clicks the primary "get started" CTA on the hero section | `src/routes/+page.svelte` |
-| `install_command_copied` | User copies the npm install command from the homepage hero or footer | `src/routes/+page.svelte` |
-| `example_tile_clicked` | User clicks a featured example tile on the homepage grid | `src/routes/+page.svelte` |
-| `llms_txt_opened` | User clicks an AI-ready docs link (llms.txt, llms-full.txt, or per-page mirror) | `src/routes/+page.svelte` |
-| `doc_page_viewed` | User navigates to a documentation page — top of the adoption funnel | `src/routes/docs/+layout.svelte` |
-| `examples_index_viewed` | User views the full examples index page | `src/routes/examples/+page.svelte` |
-| `component_source_opened` | User opens the Component Source dialog to view a component's code | `src/lib/components/general/ComponentSource.svelte` |
-| `component_source_copied` | User copies source code from the Component Source dialog | `src/lib/components/general/ComponentSource.svelte` |
-| `registry_component_downloaded` | Server: tooling fetches a component JSON from the registry endpoint | `src/routes/r/[slug].json/+server.ts` |
-| `server_error` | Server: unhandled server-side error captured with status and message | `src/hooks.server.ts` |
+| Event                           | Description                                                                     | File                                                |
+| ------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `get_started_clicked`           | User clicks the primary "get started" CTA on the hero section                   | `src/routes/+page.svelte`                           |
+| `install_command_copied`        | User copies the npm install command from the homepage hero or footer            | `src/routes/+page.svelte`                           |
+| `example_tile_clicked`          | User clicks a featured example tile on the homepage grid                        | `src/routes/+page.svelte`                           |
+| `llms_txt_opened`               | User clicks an AI-ready docs link (llms.txt, llms-full.txt, or per-page mirror) | `src/routes/+page.svelte`                           |
+| `doc_page_viewed`               | User navigates to a documentation page — top of the adoption funnel             | `src/routes/docs/+layout.svelte`                    |
+| `examples_index_viewed`         | User views the full examples index page                                         | `src/routes/examples/+page.svelte`                  |
+| `component_source_opened`       | User opens the Component Source dialog to view a component's code               | `src/lib/components/general/ComponentSource.svelte` |
+| `component_source_copied`       | User copies source code from the Component Source dialog                        | `src/lib/components/general/ComponentSource.svelte` |
+| `registry_component_downloaded` | Server: tooling fetches a component JSON from the registry endpoint             | `src/routes/r/[slug].json/+server.ts`               |
+| `server_error`                  | Server: unhandled server-side error captured with status and message            | `src/hooks.server.ts`                               |
 
 ## Next steps
 

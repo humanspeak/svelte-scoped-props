@@ -20,7 +20,12 @@ export const docsConfig: DocsKitConfig = {
         'svelte-5',
         'typescript'
     ],
-    defaultFeatures: ['Explicit scoped props', 'SSR-safe classes', 'ClassValue support', 'Svelte 5'],
+    defaultFeatures: [
+        'Explicit scoped props',
+        'SSR-safe classes',
+        'ClassValue support',
+        'Svelte 5'
+    ],
     fallbackStars: 0
 }
 

@@ -1,5 +1,5 @@
-import adapter from '@sveltejs/adapter-cloudflare'
 import { scopedProps } from '@humanspeak/svelte-scoped-props'
+import adapter from '@sveltejs/adapter-cloudflare'
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 import { mdsvex } from 'mdsvex'
 import { createHighlighter } from 'shiki'

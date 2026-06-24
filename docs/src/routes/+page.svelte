@@ -25,7 +25,8 @@
         seo.description =
             'Svelte Scoped Props is an experimental Svelte preprocessor for forwarding parent-scoped classes through explicit component props.'
         seo.ogTitle = 'Svelte Scoped Props'
-        seo.ogTagline = 'Parent-owned scoped classes for component props, without reaching for :global.'
+        seo.ogTagline =
+            'Parent-owned scoped classes for component props, without reaching for :global.'
         seo.ogFeatures = [
             'Explicit scoped props',
             'SSR-safe classes',
@@ -62,7 +63,12 @@
         ac?: boolean
     }
     const stats: StatItem[] = $derived([
-        { k: 'proof cases', v: String(CASE_COUNT), n: 'literal · dynamic · alias · spread', ac: true },
+        {
+            k: 'proof cases',
+            v: String(CASE_COUNT),
+            n: 'literal · dynamic · alias · spread',
+            ac: true
+        },
         { k: 'directives', v: String(PROP_COUNT), n: 'scoped:class · scoped:<prop>' },
         {
             k: 'runtime helpers',
@@ -297,9 +303,9 @@
                     >
                 </h1>
                 <p class="sub">
-                    <b>Explicit scoped class props for Svelte.</b> Write parent-owned CSS once,
-                    pass it through <code>scoped:class</code> or <code>scoped:&lt;prop&gt;</code>,
-                    and let the preprocessor add the parent scope hash for client and SSR output.
+                    <b>Explicit scoped class props for Svelte.</b> Write parent-owned CSS once, pass
+                    it through <code>scoped:class</code> or <code>scoped:&lt;prop&gt;</code>, and
+                    let the preprocessor add the parent scope hash for client and SSR output.
                 </p>
                 <div class="cta-row">
                     <a class="pri" href="/docs" onclick={captureGetStarted}>get started ↗</a>
@@ -370,24 +376,31 @@
                         ><span class="lbl">file</span> ·
                         <span class="v">spread-forwarding.svelte</span></span
                     >
+                    <span><span class="lbl">prop</span> <span class="v">scoped:class</span></span>
                     <span
-                        ><span class="lbl">prop</span> <span class="v">scoped:class</span></span
+                        ><span class="lbl">value</span> <span class="v">{spreadPreview}</span></span
                     >
-                    <span><span class="lbl">value</span> <span class="v">{spreadPreview}</span></span>
-                    <span><span class="lbl">path</span> <span class="v">parent → middle → third</span></span>
+                    <span
+                        ><span class="lbl">path</span>
+                        <span class="v">parent → middle → third</span></span
+                    >
                     <span class="live">● FORWARDED</span>
                 </div>
                 <div class="spread-stage">
                     <div class="spread-controls">
                         <div class="control-head">
                             <span>parent call site</span>
-                            <code>&lt;MiddleSpreadCard scoped:class=&#123;classValue&#125; /&gt;</code>
+                            <code
+                                >&lt;MiddleSpreadCard scoped:class=&#123;classValue&#125; /&gt;</code
+                            >
                         </div>
                         <div class="tone-grid" aria-label="Choose parent-owned color">
                             {#each spreadToneOptions as option (option.id)}
                                 <MotionButton
                                     type="button"
-                                    class="tone-button {spreadTone === option.id ? 'is-active' : ''}"
+                                    class="tone-button {spreadTone === option.id
+                                        ? 'is-active'
+                                        : ''}"
                                     aria-pressed={spreadTone === option.id}
                                     onclick={() => (spreadTone = option.id)}
                                     whileTap={{ scale: 0.97 }}
@@ -575,8 +588,8 @@
                 <div class="k">FIG-005 / EXAMPLES</div>
                 <h2>explore <span>interactive examples</span>.</h2>
                 <p>
-                    Literal classes, dynamic ClassValue objects, prop aliases, and SSR paint all have
-                    visible cases in the test surface.
+                    Literal classes, dynamic ClassValue objects, prop aliases, and SSR paint all
+                    have visible cases in the test surface.
                 </p>
             </div>
             <div>

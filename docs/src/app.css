@@ -217,7 +217,11 @@ html.dark .scoped-proof {
 }
 
 .scoped-proof .comparison-boundary {
-    border-left-color: color-mix(in oklab, var(--proof-card-muted) 68%, var(--proof-source-code-border));
+    border-left-color: color-mix(
+        in oklab,
+        var(--proof-card-muted) 68%,
+        var(--proof-source-code-border)
+    );
 }
 
 .scoped-proof .comparison-cell span {

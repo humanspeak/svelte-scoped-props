@@ -39,7 +39,9 @@
         <div class="comparison-row">
             <div class="comparison-cell comparison-source">
                 <span>Alias prop contract</span>
-                <code>&lt;InternalClassCard scoped:internalClass=&#123;internalClass&#125; /&gt;</code>
+                <code
+                    >&lt;InternalClassCard scoped:internalClass=&#123;internalClass&#125; /&gt;</code
+                >
                 <code>&lt;div class=&#123;['internal-card', internalClass]&#125;&gt;</code>
             </div>
             <div class="comparison-cell comparison-result">
