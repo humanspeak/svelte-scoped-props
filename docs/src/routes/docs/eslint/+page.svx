@@ -1,0 +1,122 @@
+---
+title: ESLint
+description: Configure the Svelte Scoped Props ESLint processor for svelte/valid-compile.
+---
+
+<script>
+  import { getSeoContext } from '@humanspeak/docs-kit'
+
+  const seo = getSeoContext()
+  if (seo) {
+      seo.title = 'ESLint | Docs | Svelte Scoped Props'
+      seo.description = 'Configure @humanspeak/svelte-scoped-props/eslint so svelte/valid-compile sees transformed scoped props.'
+      seo.ogTitle = 'ESLint'
+      seo.ogTagline = 'Run valid-compile against transformed scoped props'
+      seo.ogFeatures = ['Flat Config', 'valid-compile', 'Location Remap', 'Scoped CSS Marker']
+      seo.ogSlug = 'docs-eslint'
+  }
+</script>
+
+# ESLint
+
+The Svelte preprocessor fixes `scoped:class` during builds, but ESLint sees a
+different path. `eslint-plugin-svelte` runs `svelte/valid-compile` against the source
+it receives from ESLint, so raw `scoped:class` can fail before your Svelte build
+preprocessor ever gets a turn.
+
+Without the lint processor, a scoped prop can produce errors like:
+
+```txt
+Attributes should not contain ':' characters to prevent ambiguity with Svelte directives
+Unused CSS selector ".parent-owned"
+```
+
+Use the package's ESLint processor to run the same scoped-props transform before
+Svelte lint rules compile the component.
+
+## Flat config
+
+Add the scoped props config after `eslint-plugin-svelte`'s flat config.
+
+```js title="eslint.config.js"
+import svelte from 'eslint-plugin-svelte'
+import scopedProps from '@humanspeak/svelte-scoped-props/eslint'
+
+export default [
+    ...svelte.configs['flat/recommended'],
+    ...scopedProps.configs.recommended
+]
+```
+
+ESLint only supports one active processor per file. Placing this config after the
+Svelte config lets the Svelte parser and rules remain active while the scoped props
+processor supplies transformed markup for `.svelte` files.
+
+## Custom options
+
+If your Svelte preprocessor uses custom hash options, pass the same options to the
+ESLint processor.
+
+```js title="eslint.config.js"
+import svelte from 'eslint-plugin-svelte'
+import { createProcessor } from '@humanspeak/svelte-scoped-props/eslint'
+
+export default [
+    ...svelte.configs['flat/recommended'],
+    {
+        files: ['**/*.svelte'],
+        processor: createProcessor({
+            cssHash: ({ css, filename, hash }) => `my-${hash(filename ?? css)}`
+        })
+    }
+]
+```
+
+The processor accepts the same option shape as `scopedProps()`: `cssHash`,
+`marker`, `normalizeFilename`, and `runtimeModule`.
+
+## What gets transformed
+
+Static scoped props are rewritten into normal props before linting.
+
+```svelte
+<ChildCard scoped:class="parent-owned" />
+```
+
+```svelte
+<ChildCard class="parent-owned svelte-abc123" />
+```
+
+Dynamic `ClassValue` expressions use the same runtime helper call as the build
+preprocessor.
+
+```svelte
+<ChildCard scoped:class={['parent-owned', { active }]} />
+```
+
+Prop aliases work the same way.
+
+```svelte
+<FancyCard scoped:internalClass="inner-panel" />
+```
+
+Parent-side object spreads still cannot express scoped intent. Scope before the prop
+is collected into an object, then forward the transformed prop normally.
+
+## Message locations
+
+The processor remaps lint messages back to the source you authored. Diagnostics from
+other ESLint rules should point at `scoped:class` or the original expression, not at
+the generated `class={__svelte_scoped_props_class(...)}` output.
+
+Autofixes are kept when their ranges map cleanly to authored source. Fixes that would
+edit generated helper code or marker snippets are dropped.
+
+## CSS selector checks
+
+For `svelte/valid-compile`, the processor also adds the same marker snippet used by
+the build preprocessor. That marker lets Svelte's CSS analysis see the local class
+name, so the selector is not reported as unused just because the class is handed to a
+child component prop.
+
+The marker does not render.

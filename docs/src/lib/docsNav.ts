@@ -33,6 +33,7 @@ export const docsSections: NavSection[] = [
         title: 'Reference',
         icon: BookText,
         items: [
+            { title: 'ESLint', href: '/docs/eslint', icon: ShieldCheck },
             { title: 'API Reference', href: '/docs/api-reference', icon: BookText },
             { title: 'Design notes', href: '/docs/design-notes', icon: Compass },
             { title: 'Limits', href: '/docs/limits', icon: Zap }

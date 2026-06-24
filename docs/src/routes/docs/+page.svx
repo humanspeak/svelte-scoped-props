@@ -174,5 +174,6 @@ A raw object spread cannot contain `scoped:` syntax, so scope first and spread l
 - It does not inspect child component TypeScript types.
 - It does not cross language boundaries where Svelte markup is no longer available.
 
-For the full package surface, see the [API Reference](/docs/api-reference). For the
-current caveats, see [Limits](/docs/limits).
+If CI runs `svelte/valid-compile`, add the [ESLint processor](/docs/eslint) so lint
+sees the same transform as your Svelte build. For the full package surface, see the
+[API Reference](/docs/api-reference). For the current caveats, see [Limits](/docs/limits).

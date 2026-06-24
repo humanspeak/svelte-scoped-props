@@ -34,6 +34,38 @@ export default {
 
 Place `scopedProps()` after style preprocessors. The package computes the same default CSS hash Svelte uses, so it needs to see the post-processed CSS.
 
+## ESLint
+
+`eslint-plugin-svelte` compiles the raw `.svelte` source for `svelte/valid-compile`, so `scoped:class` needs the same rewrite during linting:
+
+```js
+// eslint.config.js
+import svelte from 'eslint-plugin-svelte';
+import scopedProps from '@humanspeak/svelte-scoped-props/eslint';
+
+export default [
+  ...svelte.configs['flat/recommended'],
+  ...scopedProps.configs.recommended
+];
+```
+
+Place the scoped props config after the Svelte flat config. ESLint only supports one active processor per file, so this keeps the Svelte parser and rules while the scoped props processor supplies transformed markup. Static values, dynamic `ClassValue` expressions, and scoped aliases use the same transform as the Svelte preprocessor. Parent-side spread objects still cannot express scoped intent; scope the prop before it is spread, then forward the transformed prop normally.
+
+If you pass custom hash options to the Svelte preprocessor, pass the same options to ESLint:
+
+```js
+import svelte from 'eslint-plugin-svelte';
+import { createProcessor } from '@humanspeak/svelte-scoped-props/eslint';
+
+export default [
+  ...svelte.configs['flat/recommended'],
+  {
+    files: ['**/*.svelte'],
+    processor: createProcessor({ cssHash })
+  }
+];
+```
+
 ## Alpha Test Pages
 
 ```sh
