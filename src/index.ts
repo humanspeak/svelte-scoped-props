@@ -605,7 +605,7 @@ function boostScopedStyleSpecificity(source: string, classNames: Set<string>): s
     )
 }
 
-function boostCssSpecificity(css: string, classNames: Set<string>): string {
+function mapCssPreludes(css: string, map: (prelude: string) => string): string {
     let output = ''
     let segmentStart = 0
     let quote: string | null = null
@@ -642,7 +642,7 @@ function boostCssSpecificity(css: string, classNames: Set<string>): string {
 
         if (character === '{') {
             const prelude = css.slice(segmentStart, index)
-            output += boostSelectorPrelude(prelude, classNames)
+            output += map(prelude)
             output += character
             segmentStart = index + 1
             continue
@@ -657,22 +657,38 @@ function boostCssSpecificity(css: string, classNames: Set<string>): string {
     return output + css.slice(segmentStart)
 }
 
+function boostCssSpecificity(css: string, classNames: Set<string>): string {
+    return mapCssPreludes(css, (prelude) => boostSelectorPrelude(prelude, classNames))
+}
+
+function stripQuotedSections(text: string): string {
+    return text.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, (match) => ' '.repeat(match.length))
+}
+
 function boostSelectorPrelude(prelude: string, classNames: Set<string>): string {
     if (prelude.trimStart().startsWith('@')) return prelude
 
-    return prelude.replace(
-        /(?<![\w-])\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)/g,
-        (match, className, offset) => {
-            if (!classNames.has(className)) return match
+    const scannable = stripQuotedSections(prelude)
+    const pattern = /\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)/g
+    let output = ''
+    let cursor = 0
+    let match: RegExpExecArray | null
 
-            const previous = prelude.slice(Math.max(0, offset - match.length), offset)
-            const next = prelude.slice(offset + match.length, offset + match.length * 2)
+    while ((match = pattern.exec(scannable)) !== null) {
+        const token = match[0]
+        const className = match[1] as string
+        if (!classNames.has(className)) continue
 
-            if (previous === match || next === match) return match
+        const previous = scannable.slice(Math.max(0, match.index - token.length), match.index)
+        const next = scannable.slice(match.index + token.length, match.index + token.length * 2)
+        if (previous === token || next === token) continue
 
-            return `${match}${match}`
-        }
-    )
+        const end = match.index + token.length
+        output += prelude.slice(cursor, end) + token
+        cursor = end
+    }
+
+    return output + prelude.slice(cursor)
 }
 
 function addClassNameTokens(classNames: Set<string>, value: string): void {
@@ -697,14 +713,22 @@ function uniqueSnippetName(source: string): string {
 
 function readCssClassNames(source: string): Set<string> {
     const classes = new Set<string>()
-    const classPattern = /(?<![\w-])\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)/g
+    const classPattern = /\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)/g
 
     for (const css of readStyleContents(source)) {
-        let match: RegExpExecArray | null
+        mapCssPreludes(css, (prelude) => {
+            if (prelude.trimStart().startsWith('@')) return prelude
 
-        while ((match = classPattern.exec(css)) !== null) {
-            classes.add(match[1] as string)
-        }
+            const scannable = stripQuotedSections(prelude)
+            let match: RegExpExecArray | null
+
+            classPattern.lastIndex = 0
+            while ((match = classPattern.exec(scannable)) !== null) {
+                classes.add(match[1] as string)
+            }
+
+            return prelude
+        })
     }
 
     return classes
