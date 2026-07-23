@@ -590,9 +590,228 @@ function addCssMarkerSnippet(source: string): string {
     if (classes.length === 0) return source
 
     const snippetName = uniqueSnippetName(source)
-    const marker = `\n{#snippet ${snippetName}()}<div class="${classes.join(' ')}"></div>{/snippet}\n`
+    const chains = readMarkerChains(source).join('')
+    const fallback = `<svelte:element this={'x'} class="${classes.join(' ')}"></svelte:element>`
+    const marker = `\n{#snippet ${snippetName}()}${chains}${fallback}{/snippet}\n`
 
     return `${source}${marker}`
+}
+
+type SelectorCompound = { type: string | null; classes: string[] }
+type MarkerNode = { classes: string[]; children: MarkerNode[] }
+type SelectorCombinator = 'descendant' | 'child' | 'sibling'
+
+function readMarkerChains(source: string): string[] {
+    const chains = new Set<string>()
+
+    for (const css of readStyleContents(source)) {
+        mapCssPreludes(css, (prelude) => {
+            if (prelude.trimStart().startsWith('@')) return prelude
+
+            for (const selector of splitTopLevelSelectors(stripCssComments(prelude))) {
+                const chain = synthesizeSelectorChain(selector)
+                if (chain !== null) chains.add(chain)
+            }
+
+            return prelude
+        })
+    }
+
+    return Array.from(chains)
+}
+
+function splitTopLevelSelectors(prelude: string): string[] {
+    const scannable = stripQuotedSections(prelude)
+    const selectors: string[] = []
+    let depth = 0
+    let start = 0
+
+    for (let index = 0; index < prelude.length; index += 1) {
+        const character = scannable[index]
+
+        if (character === '(' || character === '[') {
+            depth += 1
+        } else if (character === ')' || character === ']') {
+            depth = Math.max(0, depth - 1)
+        } else if (character === ',' && depth === 0) {
+            selectors.push(prelude.slice(start, index))
+            start = index + 1
+        }
+    }
+
+    selectors.push(prelude.slice(start))
+
+    return selectors.map((selector) => selector.trim()).filter((selector) => selector.length > 0)
+}
+
+function synthesizeSelectorChain(selector: string): string | null {
+    const { compounds, combinators } = splitSelectorCompounds(selector)
+    if (compounds.length === 0) return null
+
+    const parsed: SelectorCompound[] = []
+    for (const compound of compounds) {
+        const result = parseSelectorCompound(compound)
+        if (result === null) return null
+        parsed.push(result)
+    }
+
+    // Single-compound selectors (typed or not) are defended by the dynamic
+    // all-classes fallback node, so they never need a synthesized chain.
+    if (parsed.length === 1) return null
+
+    const roots: MarkerNode[] = []
+    let path: MarkerNode[] = []
+
+    for (const [index, compound] of parsed.entries()) {
+        const node: MarkerNode = {
+            classes: compound.classes,
+            children: []
+        }
+
+        if (index === 0) {
+            roots.push(node)
+            path = [node]
+            continue
+        }
+
+        const combinator = combinators[index - 1]
+
+        if (combinator === 'sibling') {
+            const parent = path[path.length - 2]
+            if (parent) {
+                parent.children.push(node)
+            } else {
+                roots.push(node)
+            }
+            path = path.slice(0, -1)
+            path.push(node)
+        } else {
+            const parent = path[path.length - 1]
+            if (parent) parent.children.push(node)
+            path.push(node)
+        }
+    }
+
+    return roots.map(renderMarkerNode).join('')
+}
+
+function splitSelectorCompounds(selector: string): {
+    compounds: string[]
+    combinators: SelectorCombinator[]
+} {
+    const scannable = stripQuotedSections(selector)
+    const compounds: string[] = []
+    const combinators: SelectorCombinator[] = []
+    let depth = 0
+    let index = 0
+
+    while (index < selector.length) {
+        let combinator: SelectorCombinator = 'descendant'
+        let sawSeparator = false
+
+        while (index < selector.length) {
+            const character = scannable[index] ?? ''
+            const isSeparator = depth === 0 && (/\s/.test(character) || '>+~'.includes(character))
+
+            if (!isSeparator) break
+
+            sawSeparator = true
+            if (character === '>') combinator = 'child'
+            else if (character === '+' || character === '~') combinator = 'sibling'
+            index += 1
+        }
+
+        if (index >= selector.length) break
+
+        const compoundStart = index
+        while (index < selector.length) {
+            const character = scannable[index] ?? ''
+
+            if (character === '(' || character === '[') {
+                depth += 1
+            } else if (character === ')' || character === ']') {
+                depth = Math.max(0, depth - 1)
+            } else if (depth === 0 && (/\s/.test(character) || '>+~'.includes(character))) {
+                break
+            }
+
+            index += 1
+        }
+
+        if (compounds.length > 0 && sawSeparator) {
+            combinators.push(combinator)
+        }
+        compounds.push(selector.slice(compoundStart, index))
+    }
+
+    return { compounds, combinators }
+}
+
+function parseSelectorCompound(compound: string): SelectorCompound | null {
+    const scannable = stripQuotedSections(compound)
+    if (scannable.includes('[')) return null
+    if (scannable.includes(':global')) return null
+
+    let type: string | null = null
+    const classes: string[] = []
+    let index = 0
+
+    const typeMatch = /^(\*|[a-zA-Z][a-zA-Z0-9-]*)/.exec(compound)
+    if (typeMatch) {
+        const typeToken = typeMatch[1] as string
+        type = typeToken === '*' ? null : typeToken
+        index = typeMatch[0].length
+    }
+
+    while (index < compound.length) {
+        const character = compound[index]
+
+        if (character === '.') {
+            const classMatch = /^\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)/.exec(compound.slice(index))
+            if (!classMatch) return null
+            const className = classMatch[1] as string
+            if (!classes.includes(className)) classes.push(className)
+            index += classMatch[0].length
+            continue
+        }
+
+        if (character === ':') {
+            index += 1
+            if (compound[index] === ':') index += 1
+
+            const nameMatch = /^[a-zA-Z-]+/.exec(compound.slice(index))
+            if (!nameMatch) return null
+            index += nameMatch[0].length
+
+            if (compound[index] === '(') {
+                let depth = 0
+                while (index < compound.length) {
+                    const inner = compound[index]
+                    if (inner === '(') {
+                        depth += 1
+                    } else if (inner === ')') {
+                        depth -= 1
+                        index += 1
+                        if (depth === 0) break
+                        continue
+                    }
+                    index += 1
+                }
+            }
+            continue
+        }
+
+        return null
+    }
+
+    return { type, classes }
+}
+
+function renderMarkerNode(node: MarkerNode): string {
+    const classAttribute = node.classes.length > 0 ? ` class="${node.classes.join(' ')}"` : ''
+    const children = node.children.map(renderMarkerNode).join('')
+
+    return `<svelte:element this={'x'}${classAttribute}>${children}</svelte:element>`
 }
 
 function boostScopedStyleSpecificity(source: string, classNames: Set<string>): string {
@@ -605,7 +824,7 @@ function boostScopedStyleSpecificity(source: string, classNames: Set<string>): s
     )
 }
 
-function boostCssSpecificity(css: string, classNames: Set<string>): string {
+function mapCssPreludes(css: string, map: (prelude: string) => string): string {
     let output = ''
     let segmentStart = 0
     let quote: string | null = null
@@ -642,7 +861,7 @@ function boostCssSpecificity(css: string, classNames: Set<string>): string {
 
         if (character === '{') {
             const prelude = css.slice(segmentStart, index)
-            output += boostSelectorPrelude(prelude, classNames)
+            output += map(prelude)
             output += character
             segmentStart = index + 1
             continue
@@ -657,22 +876,42 @@ function boostCssSpecificity(css: string, classNames: Set<string>): string {
     return output + css.slice(segmentStart)
 }
 
+function boostCssSpecificity(css: string, classNames: Set<string>): string {
+    return mapCssPreludes(css, (prelude) => boostSelectorPrelude(prelude, classNames))
+}
+
+function stripQuotedSections(text: string): string {
+    return text.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, (match) => ' '.repeat(match.length))
+}
+
+function stripCssComments(text: string): string {
+    return text.replace(/\/\*[\s\S]*?(?:\*\/|$)/g, (match) => ' '.repeat(match.length))
+}
+
 function boostSelectorPrelude(prelude: string, classNames: Set<string>): string {
     if (prelude.trimStart().startsWith('@')) return prelude
 
-    return prelude.replace(
-        /(?<![\w-])\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)/g,
-        (match, className, offset) => {
-            if (!classNames.has(className)) return match
+    const scannable = stripCssComments(stripQuotedSections(prelude))
+    const pattern = /\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)/g
+    let output = ''
+    let cursor = 0
+    let match: RegExpExecArray | null
 
-            const previous = prelude.slice(Math.max(0, offset - match.length), offset)
-            const next = prelude.slice(offset + match.length, offset + match.length * 2)
+    while ((match = pattern.exec(scannable)) !== null) {
+        const token = match[0]
+        const className = match[1] as string
+        if (!classNames.has(className)) continue
 
-            if (previous === match || next === match) return match
+        const previous = scannable.slice(Math.max(0, match.index - token.length), match.index)
+        const next = scannable.slice(match.index + token.length, match.index + token.length * 2)
+        if (previous === token || next === token) continue
 
-            return `${match}${match}`
-        }
-    )
+        const end = match.index + token.length
+        output += prelude.slice(cursor, end) + token
+        cursor = end
+    }
+
+    return output + prelude.slice(cursor)
 }
 
 function addClassNameTokens(classNames: Set<string>, value: string): void {
@@ -697,14 +936,22 @@ function uniqueSnippetName(source: string): string {
 
 function readCssClassNames(source: string): Set<string> {
     const classes = new Set<string>()
-    const classPattern = /(?<![\w-])\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)/g
+    const classPattern = /\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)/g
 
     for (const css of readStyleContents(source)) {
-        let match: RegExpExecArray | null
+        mapCssPreludes(css, (prelude) => {
+            if (prelude.trimStart().startsWith('@')) return prelude
 
-        while ((match = classPattern.exec(css)) !== null) {
-            classes.add(match[1] as string)
-        }
+            const scannable = stripCssComments(stripQuotedSections(prelude))
+            let match: RegExpExecArray | null
+
+            classPattern.lastIndex = 0
+            while ((match = classPattern.exec(scannable)) !== null) {
+                classes.add(match[1] as string)
+            }
+
+            return prelude
+        })
     }
 
     return classes

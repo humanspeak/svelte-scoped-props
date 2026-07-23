@@ -38,6 +38,9 @@ lint:
           paths:
               - '**/worker-configuration.d.ts'
               - convex/_generated/**
+              # Agent plan/guard records — internal working documents, not
+              # publishable prose; keep linters off them.
+              - .agents/.plans/**
               # shadcn-style registry blobs — generated/curated externally;
               # don't let the formatter rewrite their indent on every run.
               - docs/static/r/**

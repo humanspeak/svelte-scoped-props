@@ -80,6 +80,13 @@
             title: 'Spread forwarding',
             description:
                 'Scope before spread, then forward the transformed prop through a middle child to a third child.'
+        },
+        {
+            href: '/examples/compound-selector',
+            slug: 'compound-selector',
+            title: 'Compound selectors',
+            description:
+                'A conditionally-added class gates a compound rule on the same child element, and combinator rules survive pruning too.'
         }
     ]
 
