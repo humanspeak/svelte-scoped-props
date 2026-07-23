@@ -2,19 +2,13 @@
     import { browser } from '$app/environment'
     import { getBreadcrumbContext } from '$lib/components/contexts/Breadcrumb/Breadcrumb.context'
     import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
+    import { listExamples } from '$lib/examplesIndex'
     import { BrutIndexV2 } from '@humanspeak/docs-kit'
     import posthog from 'posthog-js'
 
     $effect(() => {
         if (browser) posthog.capture('examples_index_viewed')
     })
-
-    type ExampleCase = {
-        href: string
-        slug: string
-        title: string
-        description: string
-    }
 
     const breadcrumbs = getBreadcrumbContext()
     const seo = getSeoContext()
@@ -31,64 +25,10 @@
         seo.ogSlug = 'examples'
     }
 
-    const exampleCases: ExampleCase[] = [
-        {
-            href: '/examples/explicit-literal',
-            slug: 'explicit-literal',
-            title: 'Explicit literal',
-            description:
-                'A literal parent-owned class reaches a child component only when the call site uses scoped:class.'
-        },
-        {
-            href: '/examples/plain-class-boundary',
-            slug: 'plain-class-boundary',
-            title: 'Plain class boundary',
-            description:
-                'Plain component class stays plain, making the current Svelte boundary visible instead of hiding it.'
-        },
-        {
-            href: '/examples/ssr-literal',
-            slug: 'ssr-literal',
-            title: 'SSR literal',
-            description:
-                'Server-rendered output already includes the parent hash for scoped:class before hydration.'
-        },
-        {
-            href: '/examples/dynamic-class-value',
-            slug: 'dynamic-class-value',
-            title: 'Dynamic ClassValue',
-            description:
-                'Arrays, object maps, and derived state update while keeping the parent scope hash attached.'
-        },
-        {
-            href: '/examples/non-class-value-class-prop',
-            slug: 'non-class-value-class-prop',
-            title: 'Non-ClassValue class prop',
-            description:
-                'A prop named class can still be user data, so ordinary class props are left untouched.'
-        },
-        {
-            href: '/examples/class-value-alias',
-            slug: 'class-value-alias',
-            title: 'ClassValue alias',
-            description:
-                'Target a class-like prop such as internalClass without making plain component class magical.'
-        },
-        {
-            href: '/examples/spread-forwarding',
-            slug: 'spread-forwarding',
-            title: 'Spread forwarding',
-            description:
-                'Scope before spread, then forward the transformed prop through a middle child to a third child.'
-        },
-        {
-            href: '/examples/compound-selector',
-            slug: 'compound-selector',
-            title: 'Compound selectors',
-            description:
-                'A conditionally-added class gates a compound rule on the same child element, and combinator rules survive pruning too.'
-        }
-    ]
+    // Canonical example order lives in `$lib/examplesIndex` so the index grid
+    // below and the per-page `PagerV2` (mounted in the examples layout) share
+    // one source of truth and their `№` numbering always agrees.
+    const exampleCases = listExamples()
 
     const pad2 = (n: number) => String(n).padStart(2, '0')
 </script>
