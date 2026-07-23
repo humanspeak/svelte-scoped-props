@@ -845,6 +845,9 @@ function parseSelectorCompound(compound: string): SelectorCompound | null {
 
 function renderMarkerNode(node: MarkerNode): string {
     const classAttribute = node.classes.length > 0 ? ` class="${node.classes.join(' ')}"` : ''
+
+    if (VOID_TYPES.has(node.tag.toLowerCase())) return `<${node.tag}${classAttribute} />`
+
     const children = node.children.map(renderMarkerNode).join('')
 
     return `<${node.tag}${classAttribute}>${children}</${node.tag}>`
