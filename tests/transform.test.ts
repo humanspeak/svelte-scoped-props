@@ -81,6 +81,27 @@ describe('transformScopedProps', () => {
         expect(compiled.css?.code).not.toContain('(unused)')
     })
 
+    it('keeps element-qualified and combinator selectors of scoped classes', async () => {
+        const source = `<script>import Child from './Child.svelte';</script>
+<Child scoped:class="a b" />
+<style>
+button.a{color:red}
+.a .b{color:blue}
+.a > .b{color:green}
+span.a + button.b{color:purple}
+</style>`
+        const processed = await preprocess(source, scopedProps(), { filename })
+        const compiled = compile(processed.code, {
+            filename,
+            generate: 'client',
+            warningFilter: () => false
+        })
+
+        expect(compiled.css?.code).not.toContain('(unused)')
+        expect(compiled.css?.code).toContain('button.a')
+        expect(compiled.css?.code).toContain('.a')
+    })
+
     it('collects every class of a compound selector onto the marker', () => {
         const result = transformScopedProps(
             `<script>import Child from './Child.svelte';</script>
