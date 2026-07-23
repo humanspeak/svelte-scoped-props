@@ -18,6 +18,30 @@
 - **Category**: docs / dx
 - **Planned at**: commit `98e3ee7` (branch `chore/package-updates`), 2026-07-23
 
+> Revision 2026-07-23 (post-investigation, PLAN AMENDED — Path A): the plan's
+> premise that exampleMirrorsPlugin requires per-slug demo folders is FALSE.
+> Executor evidence (dist/vite/example-mirrors.js resolveSampleFiles, line
+> 299): the demo-source import walk is constrained to the KEY's first path
+> segment (`exampleRoot`), not the route slug. With our shared
+> `scoped-props/demos/` folder every key shares that root, so shared
+> components (ChildCard, used by 5 routes) mirror correctly with NO moves.
+> Per-slug moves would silently drop ChildCard's source from 4 of 5 mirrors
+> or force duplicating it ×5 (drift risk). AMENDED DESIGN: restructure the 8
+> pages in place to `const sections` + `{#each}` (empirically proven to
+> produce complete mirrors); demos and keys DO NOT move. Superseded items:
+> the file-move steps, the shared-components placement question, and the done
+> criteria `grep -rn "scoped-props/demos" docs/src → 0` (now inverted: keys
+> must remain unchanged). Also confirmed: the plugin aborts entirely on the
+> first sections-less page, so mirrors can only be wired after ALL 8 pages
+> are restructured; `ExampleSection`/`formatSheetLabel` import from
+> `@humanspeak/docs-kit`; `formatSheetLabel(0,1)` === the current hardcoded
+> "SHEET 01 / 01"; `mode ?? 'live'` matches ExampleV2's default. New done
+> criteria: all 8 pages use `const sections: ExampleSection[]` + `{#each}`;
+> demo keys unchanged; plugin wired + gitignore entries; 8 complete mirrors
+> including shared-component source where imported; docs-check problem set
+> identical to the 10/6 baseline (the SsrLiteral demo error keeps its path
+> since nothing moves); root gate, trunk, scope-clean as before.
+
 ## Why this matters
 
 Plan 001 deferred `exampleMirrorsPlugin` because our example pages are
