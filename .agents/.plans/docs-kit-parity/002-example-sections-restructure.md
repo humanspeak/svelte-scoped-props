@@ -41,6 +41,20 @@
 > including shared-component source where imported; docs-check problem set
 > identical to the 10/6 baseline (the SsrLiteral demo error keeps its path
 > since nothing moves); root gate, trunk, scope-clean as before.
+>
+> Revision 2, 2026-07-23 (operator-directed, org-pattern sweep): retire the
+> local `demo-code-samples.ts` wrapper + `demoCodeDependencies` map during
+> the restructure. Org survey: only svelte-motion (our template) carries the
+> map; svelte-markdown and svelte-virtual-chat pages import `demoCodeSample`
+> directly from `$lib/demo-loaders` and list each sample file inline in the
+> page's `codeSnippet` snippet. Adopt that: each restructured page calls
+> `demoCodeSample('<same keys as today>', …)` per file it currently shows
+> (demo + its dependency components per the old map — the RENDERED PANELS
+> must stay identical), then delete `docs/src/lib/demo-code-samples.ts` once
+> nothing imports it. `demo-code-samples.ts` joins the in-scope list; new
+> done criterion: `grep -rn "demo-code-samples" docs/src` → 0. This
+> supersedes plan 001's "keep the map" verdict — the map's function moves to
+> the call sites, it does not disappear.
 
 ## Why this matters
 
