@@ -11,6 +11,7 @@ fully before starting, honor its STOP conditions, and update your row when done.
 | 001  | Keep compound selectors of scoped classes from being pruned           | P1       | S      | —          | DONE (guard PASS at 74ecd0e, branch advisor/001-compound-scoped-classes) |
 | 002  | Synthesize marker structure per selector (typed + combinator support) | P2       | M      | 001        | DONE (guard PASS at 9e266e5 after post-review fix; branch advisor/002-structural-marker-synthesis) |
 | 003  | Document structural marker behavior + compound-selector example       | P2       | M      | 002        | DONE (guard PASS at bcfb645, branch advisor/003-docs-and-example) |
+| 004  | Mask CSS comments; render marker nodes as svelte:element              | P1       | M      | 002, 003   | IN PROGRESS (adversarial review of PR #12: commented selectors pruned, a11y warning leak, content-model compile errors) |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
 
@@ -31,7 +32,8 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
 - `DEFAULT_RUNTIME_MODULE` (src/index.ts) and README's install section use the
   unscoped name `svelte-scoped-props`, but the package publishes as
   `@humanspeak/svelte-scoped-props`; the docs site works around it by passing
-  `runtimeModule` explicitly. Coupled code+docs fix — candidate plan 004.
+  `runtimeModule` explicitly. Coupled code+docs fix — candidate future plan
+  (number not yet assigned; 004 was taken by the PR-review fixes).
 - Docs lint gate is red repo-wide: prettier flags `docs/src/worker-configuration.d.ts`
   and a vendored skill file; the scoped-props ESLint processor raises
   `prefer-const` on every `let x = $derived(...)` demo — possibly a
