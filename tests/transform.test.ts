@@ -217,4 +217,52 @@ span.a + button.b{color:purple}
             transformScopedProps(`<div scoped:class="parent-owned"></div>`, { filename })
         ).toThrow('component tags')
     })
+
+    it('keeps combinator selectors behind leading CSS comments', async () => {
+        const source = `<script>import Child from './Child.svelte';</script>
+<Child scoped:class="a" />
+<Child scoped:class="b" />
+<style>/* explanation */ .a .b { color: red; }</style>`
+        const processed = await preprocess(source, scopedProps(), { filename })
+        const compiled = compile(processed.code, {
+            filename,
+            generate: 'client',
+            warningFilter: () => false
+        })
+
+        expect(compiled.css?.code).toContain('.a.a .b.b')
+        expect(compiled.css?.code).not.toContain('(unused)')
+    })
+
+    it('compiles typed markers without accessibility warnings', async () => {
+        const source = `<script>import Child from './Child.svelte';</script>
+<Child scoped:class="foo" />
+<style>a.foo{color:red}img.foo{width:1px}label.foo{color:blue}</style>`
+        const processed = await preprocess(source, scopedProps(), { filename })
+        const compiled = compile(processed.code, {
+            filename,
+            generate: 'client'
+        })
+
+        expect(compiled.warnings.filter((w) => w.code.startsWith('a11y'))).toEqual([])
+        expect(compiled.css?.code).not.toContain('(unused)')
+        expect(compiled.css?.code).toContain('a.foo')
+        expect(compiled.css?.code).toContain('img.foo')
+        expect(compiled.css?.code).toContain('label.foo')
+    })
+
+    it('keeps content-model-hazard chains without compile errors', async () => {
+        const source = `<script>import Child from './Child.svelte';</script>
+<Child scoped:class="a b" />
+<style>p.a p.b{color:red}</style>`
+        const processed = await preprocess(source, scopedProps(), { filename })
+        const compiled = compile(processed.code, {
+            filename,
+            generate: 'client',
+            warningFilter: () => false
+        })
+
+        expect(compiled.css?.code).not.toContain('(unused)')
+        expect(compiled.css?.code).toContain('p.a')
+    })
 })
