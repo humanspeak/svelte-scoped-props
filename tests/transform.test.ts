@@ -114,6 +114,34 @@ span.a + button.b{color:purple}
         expect(result.code).toContain('.page-rows.page-rows.paged.paged{min-height:61px}')
     })
 
+    it('keeps selectors with a final void element compound', async () => {
+        const source = `<script>import Child from './Child.svelte';</script>
+<Child scoped:class="a b" />
+<style>input.a{color:red}img.b{color:blue}</style>`
+        const processed = await preprocess(source, scopedProps(), { filename })
+        const compiled = compile(processed.code, {
+            filename,
+            generate: 'client',
+            warningFilter: () => false
+        })
+
+        expect(compiled.css?.code).toContain('input.a.a')
+        expect(compiled.css?.code).toContain('img.b.b')
+        expect(compiled.css?.code).not.toContain('(unused)')
+    })
+
+    it('renders final void marker nodes self-closing', () => {
+        const result = transformScopedProps(
+            `<script>import Child from './Child.svelte';</script>
+<Child scoped:class="a" />
+<style>input.a{color:red}</style>`,
+            { filename }
+        )
+
+        expect(result.code).toContain('<input class="a" />')
+        expect(result.code).not.toContain('</input>')
+    })
+
     it('strips pseudo-classes and pseudo-elements when synthesizing marker chains', () => {
         const result = transformScopedProps(
             `<script>import Child from './Child.svelte';</script>
