@@ -2,7 +2,7 @@
 
 **Recommendation: PASS** — all 8 example pages restructured with verbatim content fidelity, the mirror plugin wired and emitting complete mirrors (shared-component source intact, zero duplication), the manual dependency map retired to the org's map-less pattern, and every criterion reproduced under guard's own runs.
 **Reviewed at** e7efd2c · 2026-07-23 19:47 · **Plan planned at** 98e3ee7 (amended twice, both operator-recorded: Path A in-place design at 46884fd; rev2 map retirement at 3d39e27)
-**Integrated** — fast-forwarded to `chore/package-updates` per the operator's "all on this branch" instruction; no PR (branch not yet published).
+**Integrated** — cherry-picked onto `chore/package-updates` as 51f95b2 + 35bcd25 (histories had diverged: the rev2 plan commit landed on the branch after the worktree fork, so no fast-forward; the picks applied conflict-free and guard re-verified the docs gate post-pick). No PR — branch not yet published, per the operator's "all on this branch" instruction.
 
 ## Done criteria (amended set)
 
