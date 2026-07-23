@@ -4,6 +4,9 @@ const demoCodeDependencies: Partial<Record<DemoCodeLoaderKey, DemoCodeLoaderKey[
     'scoped-props/demos/ClassValueAlias.svelte': [
         'scoped-props/demos/components/InternalClassCard.svelte'
     ],
+    'scoped-props/demos/CompoundSelector.svelte': [
+        'scoped-props/demos/components/ChildCard.svelte'
+    ],
     'scoped-props/demos/DynamicClassValue.svelte': [
         'scoped-props/demos/components/ChildCard.svelte'
     ],
