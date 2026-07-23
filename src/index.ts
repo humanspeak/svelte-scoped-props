@@ -590,9 +590,264 @@ function addCssMarkerSnippet(source: string): string {
     if (classes.length === 0) return source
 
     const snippetName = uniqueSnippetName(source)
-    const marker = `\n{#snippet ${snippetName}()}<div class="${classes.join(' ')}"></div>{/snippet}\n`
+    const chains = readMarkerChains(source).join('')
+    const fallback = `<div class="${classes.join(' ')}"></div>`
+    const marker = `\n{#snippet ${snippetName}()}${chains}${fallback}{/snippet}\n`
 
     return `${source}${marker}`
+}
+
+type SelectorCompound = { type: string | null; classes: string[] }
+type MarkerNode = { tag: string; classes: string[]; children: MarkerNode[] }
+type SelectorCombinator = 'descendant' | 'child' | 'sibling'
+
+const UNSYNTHESIZABLE_TYPES = new Set([
+    'html',
+    'body',
+    'head',
+    'title',
+    'meta',
+    'link',
+    'script',
+    'style',
+    'slot'
+])
+const VOID_TYPES = new Set([
+    'area',
+    'base',
+    'br',
+    'col',
+    'embed',
+    'hr',
+    'img',
+    'input',
+    'source',
+    'track',
+    'wbr'
+])
+
+function readMarkerChains(source: string): string[] {
+    const chains = new Set<string>()
+
+    for (const css of readStyleContents(source)) {
+        mapCssPreludes(css, (prelude) => {
+            if (prelude.trimStart().startsWith('@')) return prelude
+
+            for (const selector of splitTopLevelSelectors(prelude)) {
+                const chain = synthesizeSelectorChain(selector)
+                if (chain !== null) chains.add(chain)
+            }
+
+            return prelude
+        })
+    }
+
+    return Array.from(chains)
+}
+
+function splitTopLevelSelectors(prelude: string): string[] {
+    const scannable = stripQuotedSections(prelude)
+    const selectors: string[] = []
+    let depth = 0
+    let start = 0
+
+    for (let index = 0; index < prelude.length; index += 1) {
+        const character = scannable[index]
+
+        if (character === '(' || character === '[') {
+            depth += 1
+        } else if (character === ')' || character === ']') {
+            depth = Math.max(0, depth - 1)
+        } else if (character === ',' && depth === 0) {
+            selectors.push(prelude.slice(start, index))
+            start = index + 1
+        }
+    }
+
+    selectors.push(prelude.slice(start))
+
+    return selectors.map((selector) => selector.trim()).filter((selector) => selector.length > 0)
+}
+
+function synthesizeSelectorChain(selector: string): string | null {
+    const { compounds, combinators } = splitSelectorCompounds(selector)
+    if (compounds.length === 0) return null
+
+    const parsed: SelectorCompound[] = []
+    for (const compound of compounds) {
+        const result = parseSelectorCompound(compound)
+        if (result === null) return null
+        parsed.push(result)
+    }
+
+    for (const [index, compound] of parsed.entries()) {
+        const type = compound.type
+        if (type === null) continue
+
+        const lower = type.toLowerCase()
+        if (UNSYNTHESIZABLE_TYPES.has(lower)) return null
+        if (VOID_TYPES.has(lower) && index < parsed.length - 1) return null
+    }
+
+    const roots: MarkerNode[] = []
+    let path: MarkerNode[] = []
+
+    for (const [index, compound] of parsed.entries()) {
+        const node: MarkerNode = {
+            tag: compound.type ?? 'div',
+            classes: compound.classes,
+            children: []
+        }
+
+        if (index === 0) {
+            roots.push(node)
+            path = [node]
+            continue
+        }
+
+        const combinator = combinators[index - 1]
+
+        if (combinator === 'sibling') {
+            const parent = path[path.length - 2]
+            if (parent) {
+                parent.children.push(node)
+            } else {
+                roots.push(node)
+            }
+            path = path.slice(0, -1)
+            path.push(node)
+        } else {
+            const parent = path[path.length - 1]
+            if (parent) parent.children.push(node)
+            path.push(node)
+        }
+    }
+
+    const root = roots[0]
+    if (roots.length === 1 && root && root.tag === 'div' && root.children.length === 0) {
+        return null
+    }
+
+    return roots.map(renderMarkerNode).join('')
+}
+
+function splitSelectorCompounds(selector: string): {
+    compounds: string[]
+    combinators: SelectorCombinator[]
+} {
+    const scannable = stripQuotedSections(selector)
+    const compounds: string[] = []
+    const combinators: SelectorCombinator[] = []
+    let depth = 0
+    let index = 0
+
+    while (index < selector.length) {
+        let combinator: SelectorCombinator = 'descendant'
+        let sawSeparator = false
+
+        while (index < selector.length) {
+            const character = scannable[index] ?? ''
+            const isSeparator = depth === 0 && (/\s/.test(character) || '>+~'.includes(character))
+
+            if (!isSeparator) break
+
+            sawSeparator = true
+            if (character === '>') combinator = 'child'
+            else if (character === '+' || character === '~') combinator = 'sibling'
+            index += 1
+        }
+
+        if (index >= selector.length) break
+
+        const compoundStart = index
+        while (index < selector.length) {
+            const character = scannable[index] ?? ''
+
+            if (character === '(' || character === '[') {
+                depth += 1
+            } else if (character === ')' || character === ']') {
+                depth = Math.max(0, depth - 1)
+            } else if (depth === 0 && (/\s/.test(character) || '>+~'.includes(character))) {
+                break
+            }
+
+            index += 1
+        }
+
+        if (compounds.length > 0 && sawSeparator) {
+            combinators.push(combinator)
+        }
+        compounds.push(selector.slice(compoundStart, index))
+    }
+
+    return { compounds, combinators }
+}
+
+function parseSelectorCompound(compound: string): SelectorCompound | null {
+    const scannable = stripQuotedSections(compound)
+    if (scannable.includes('[')) return null
+    if (scannable.includes(':global')) return null
+
+    let type: string | null = null
+    const classes: string[] = []
+    let index = 0
+
+    const typeMatch = /^(\*|[a-zA-Z][a-zA-Z0-9-]*)/.exec(compound)
+    if (typeMatch) {
+        const typeToken = typeMatch[1] as string
+        type = typeToken === '*' ? null : typeToken
+        index = typeMatch[0].length
+    }
+
+    while (index < compound.length) {
+        const character = compound[index]
+
+        if (character === '.') {
+            const classMatch = /^\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)/.exec(compound.slice(index))
+            if (!classMatch) return null
+            const className = classMatch[1] as string
+            if (!classes.includes(className)) classes.push(className)
+            index += classMatch[0].length
+            continue
+        }
+
+        if (character === ':') {
+            index += 1
+            if (compound[index] === ':') index += 1
+
+            const nameMatch = /^[a-zA-Z-]+/.exec(compound.slice(index))
+            if (!nameMatch) return null
+            index += nameMatch[0].length
+
+            if (compound[index] === '(') {
+                let depth = 0
+                while (index < compound.length) {
+                    const inner = compound[index]
+                    if (inner === '(') {
+                        depth += 1
+                    } else if (inner === ')') {
+                        depth -= 1
+                        index += 1
+                        if (depth === 0) break
+                        continue
+                    }
+                    index += 1
+                }
+            }
+            continue
+        }
+
+        return null
+    }
+
+    return { type, classes }
+}
+
+function renderMarkerNode(node: MarkerNode): string {
+    const classAttribute = node.classes.length > 0 ? ` class="${node.classes.join(' ')}"` : ''
+    const children = node.children.map(renderMarkerNode).join('')
+
+    return `<${node.tag}${classAttribute}>${children}</${node.tag}>`
 }
 
 function boostScopedStyleSpecificity(source: string, classNames: Set<string>): string {

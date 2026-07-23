@@ -114,6 +114,76 @@ span.a + button.b{color:purple}
         expect(result.code).toContain('.page-rows.page-rows.paged.paged{min-height:61px}')
     })
 
+    it('strips pseudo-classes and pseudo-elements when synthesizing marker chains', () => {
+        const result = transformScopedProps(
+            `<script>import Child from './Child.svelte';</script>
+<Child scoped:class="a b" />
+<style>.a:hover .b::before{color:red}</style>`,
+            { filename }
+        )
+
+        expect(result.code).toContain('<div class="a"><div class="b"></div></div>')
+    })
+
+    it('skips selectors with attribute selectors but keeps the fallback div', () => {
+        const result = transformScopedProps(
+            `<script>import Child from './Child.svelte';</script>
+<Child scoped:class="a b" />
+<style>.a[data-x="1"]{color:red}</style>`,
+            { filename }
+        )
+
+        const marker = result.code.slice(result.code.indexOf('{#snippet'))
+        expect(marker).not.toContain('data-x')
+        expect(marker).toContain('<div class="a"></div>')
+    })
+
+    it('skips :global selectors when synthesizing marker chains', () => {
+        const result = transformScopedProps(
+            `<script>import Child from './Child.svelte';</script>
+<Child scoped:class="a b" />
+<style>:global(.a) .b{color:red}</style>`,
+            { filename }
+        )
+
+        expect(result.code.split('{#snippet').length - 1).toBe(1)
+        expect(result.code).not.toContain('<div class="a"><div')
+    })
+
+    it('deduplicates identical synthesized marker chains', () => {
+        const result = transformScopedProps(
+            `<script>import Child from './Child.svelte';</script>
+<Child scoped:class="a b" />
+<style>.a .b{color:red}.a .b:hover{color:blue}</style>`,
+            { filename }
+        )
+
+        const chain = '<div class="a"><div class="b"></div></div>'
+        expect(result.code.split(chain).length - 1).toBe(1)
+    })
+
+    it('skips selectors with a void element in a non-final compound', () => {
+        const result = transformScopedProps(
+            `<script>import Child from './Child.svelte';</script>
+<Child scoped:class="a b" />
+<style>input.a .b{color:red}</style>`,
+            { filename }
+        )
+
+        expect(result.code).not.toContain('<input')
+    })
+
+    it('synthesizes marker chains for custom element type selectors', () => {
+        const result = transformScopedProps(
+            `<script>import Child from './Child.svelte';</script>
+<Child scoped:class="a" />
+<style>my-widget.a{color:red}</style>`,
+            { filename }
+        )
+
+        expect(result.code).toContain('<my-widget class="a">')
+    })
+
     it('rejects scoped props on native elements', () => {
         expect(() =>
             transformScopedProps(`<div scoped:class="parent-owned"></div>`, { filename })
