@@ -53,8 +53,13 @@ collected into an object, then forward the transformed prop normally.
 ## Marker snippet
 
 By default, the transform adds an uncalled snippet marker so Svelte keeps the parent
-CSS selector alive during CSS analysis. The marker does not render, but it can leave a
-small unused function in compiled output.
+CSS selectors alive during CSS analysis. The marker is synthesized from the component's
+own selectors: for each scoped selector it emits an element chain that mirrors the
+selector's structure (real tags where the selector names them, nested elements for
+descendant and child combinators, adjacent siblings for `+` and `~`, pseudo-classes
+stripped, and any final void element self-closing), plus a flat fallback `<div>` that
+carries every scoped class at once. The marker does not render, but it can leave a small
+unused function in compiled output.
 
 ```ts
 scopedProps({ marker: false })
@@ -63,7 +68,34 @@ scopedProps({ marker: false })
 Only disable the marker when you are running transform-level tests and are not asking
 Svelte to compile scoped CSS.
 
-## CSS scanning
+## Selector support
 
-The alpha scanner is intentionally small. It handles normal class selectors, but it is
-not a full CSS parser. Escaped or highly unusual selector forms may need more work.
+The scanner is intentionally small and is not a full CSS parser. For scoped classes it
+synthesizes marker structure — so these selector forms survive Svelte's unused-CSS
+pruning and keep the correct scope hash:
+
+- Compound classes on one element, such as `.page-rows.paged`.
+- Descendant, child, and sibling combinators, such as `.a .b`, `.a > .b`, and
+  `span.a + button.b`.
+- Element-qualified compounds, including custom elements, such as `button.foo` or
+  `my-widget.bar`.
+- A void element in the final position of a chain (it is emitted self-closing).
+
+These forms are not matched — only the flat fallback `<div>` defends them, so their
+structural shape can still be pruned:
+
+- Selectors containing attribute selectors, such as `.a[data-open]`.
+- A `:global(...)` compound sitting inside a chain.
+- Functional or positional pseudo-classes such as `:has()`, `:nth-child()`, and
+  `:not()` — pseudos are stripped, not matched.
+- Type selectors in the reserved set `{html, body, head, title, meta, link, script,
+  style, slot}`.
+- Void elements in any non-final position of a chain.
+
+## Style block is exempt from unused-CSS pruning
+
+A component that uses `scoped:` effectively opts its `<style>` block out of Svelte's
+unused-CSS pruning for class-based rules: the marker gives every scoped class rule a
+local usage, so Svelte never reports those rules as unused. The tradeoff is that
+genuinely dead class CSS in that component will no longer be flagged by `svelte-check`,
+so keep an eye on rules you remove.
