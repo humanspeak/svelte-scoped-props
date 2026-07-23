@@ -1,6 +1,7 @@
 import {
     demoManifestPlugin,
     docMirrorsPlugin,
+    indexNowPlugin,
     llmsFullPlugin,
     llmsPlugin,
     sitemapManifestPlugin,
@@ -17,6 +18,12 @@ import devtoolsJson from 'vite-plugin-devtools-json'
 import { docsConfig } from './src/lib/docs-config'
 
 // const __filename = fileURLToPath(import.meta.url)
+
+// IndexNow submission key for THIS site. IndexNow keys are public by
+// protocol design (the key is served verbatim at `/<key>.txt`), so inlining
+// it here — matching svelte-markdown's pattern — is intentional, not a leak.
+// This UUID is unique to scoped.svelte.page; do not copy it to sibling repos.
+const indexNowKey = '34c0a202-56db-44a1-8776-146bc8ff8e99'
 
 export default defineConfig({
     plugins: [
@@ -78,6 +85,22 @@ export default defineConfig({
             defaultDescription:
                 'Spring physics, gestures, layout animations, exit animations, and scroll effects with a familiar declarative API.',
             defaultFeatures: docsConfig.defaultFeatures
+        }),
+        // Pings IndexNow (Bing, Yandex, et al.) with the sitemap manifest's
+        // URLs after a production build so search engines re-crawl changed
+        // pages promptly. `productionMode: 'indexnow'` gates the ping to
+        // builds run with `--mode indexnow` only — `pnpm dev` and ordinary
+        // `vite build` never submit — and the key is served verbatim from
+        // `static/<key>.txt`. Register last among the docs-kit plugins so it
+        // reads the freshly-written `sitemap-manifest.json`.
+        indexNowPlugin({
+            siteUrl: docsConfig.url,
+            key: indexNowKey,
+            productionMode: 'indexnow',
+            // IndexNow is a best-effort search-engine ping; a rejected
+            // submission (e.g. a transient 403) must not fail the build and
+            // block the docs deploy. Log and continue instead.
+            failOnError: false
         }),
         svelteMotionOptimize(),
         tailwindcss(),
