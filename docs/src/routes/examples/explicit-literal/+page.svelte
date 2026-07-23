@@ -1,10 +1,15 @@
 <script lang="ts">
     import { getBreadcrumbContext } from '$lib/components/contexts/Breadcrumb/Breadcrumb.context'
     import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-    import { demoCodeSamples } from '$lib/demo-code-samples'
+    import { demoCodeSample } from '$lib/demo-loaders'
     import { exampleSourceUrl } from '$lib/docs-config'
     import ExplicitLiteral from '$lib/examples/scoped-props/demos/ExplicitLiteral.svelte'
-    import { CodeReferenceV2, ExampleV2 } from '@humanspeak/docs-kit'
+    import {
+        CodeReferenceV2,
+        ExampleV2,
+        formatSheetLabel,
+        type ExampleSection
+    } from '@humanspeak/docs-kit'
 
     const breadcrumbs = getBreadcrumbContext()
     const seo = getSeoContext()
@@ -23,33 +28,62 @@
         seo.ogFeatures = ['scoped:class', 'Literal Class', 'Parent Hash', 'Opt In']
         seo.ogSlug = 'examples-explicit-literal'
     }
+
+    const sections: ExampleSection[] = [
+        {
+            figId: 'FIG-001',
+            tag: 'SCOPED CLASS',
+            title: { prefix: 'explicit ', accent: 'literal', end: '.' },
+            description:
+                'The smallest useful proof: a native element and a child component both use the same parent-owned class, but the child only gets the parent hash through `scoped:class`.',
+            snippet: defaultSection,
+            codeSnippet: defaultCode,
+            barCells: [
+                { k: 'syntax', v: 'scoped:class' },
+                { k: 'value', v: 'string literal' },
+                { k: 'status', v: 'passing' }
+            ],
+            sourceUrl: exampleSourceUrl('scoped-props/demos/ExplicitLiteral.svelte')
+        }
+    ]
 </script>
 
-{#snippet code()}
+{#snippet defaultSection()}
+    <ExplicitLiteral />
+{/snippet}
+
+{#snippet defaultCode()}
     <CodeReferenceV2
-        samples={demoCodeSamples(
-            'scoped-props/demos/ExplicitLiteral.svelte',
-            'explicit-literal',
-            'ExplicitLiteral.svelte'
-        )}
+        samples={[
+            demoCodeSample(
+                'scoped-props/demos/ExplicitLiteral.svelte',
+                'explicit-literal',
+                'ExplicitLiteral.svelte'
+            ),
+            demoCodeSample(
+                'scoped-props/demos/components/ChildCard.svelte',
+                'explicit-literal-child-card',
+                'ChildCard.svelte'
+            )
+        ]}
         columns={2}
     />
 {/snippet}
 
-<ExampleV2
-    figId="FIG-001"
-    tag="SCOPED CLASS"
-    title={{ prefix: 'explicit ', accent: 'literal', end: '.' }}
-    description="The smallest useful proof: a native element and a child component both use the same parent-owned class, but the child only gets the parent hash through `scoped:class`."
-    sheetLabel="SHEET 01 / 01"
-    barCells={[
-        { k: 'syntax', v: 'scoped:class' },
-        { k: 'value', v: 'string literal' },
-        { k: 'status', v: 'passing' }
-    ]}
-    sourceUrl={exampleSourceUrl('scoped-props/demos/ExplicitLiteral.svelte')}
-    codeSnippet={code}
-    codeLabel="show code"
->
-    <ExplicitLiteral />
-</ExampleV2>
+{#each sections as section, i (section.figId)}
+    <ExampleV2
+        figId={section.figId}
+        tag={section.tag}
+        title={section.title}
+        description={section.description}
+        mode={section.mode ?? 'live'}
+        sheetLabel={formatSheetLabel(i, sections.length)}
+        barCells={section.barCells}
+        sourceUrl={section.sourceUrl}
+        codeSnippet={section.codeSnippet}
+        codeLabel="show code"
+        notes={section.notes}
+    >
+        {@render section.snippet()}
+    </ExampleV2>
+{/each}

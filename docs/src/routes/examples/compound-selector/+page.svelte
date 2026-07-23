@@ -1,10 +1,15 @@
 <script lang="ts">
     import { getBreadcrumbContext } from '$lib/components/contexts/Breadcrumb/Breadcrumb.context'
     import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-    import { demoCodeSamples } from '$lib/demo-code-samples'
+    import { demoCodeSample } from '$lib/demo-loaders'
     import { exampleSourceUrl } from '$lib/docs-config'
     import CompoundSelector from '$lib/examples/scoped-props/demos/CompoundSelector.svelte'
-    import { CodeReferenceV2, ExampleV2 } from '@humanspeak/docs-kit'
+    import {
+        CodeReferenceV2,
+        ExampleV2,
+        formatSheetLabel,
+        type ExampleSection
+    } from '@humanspeak/docs-kit'
 
     const breadcrumbs = getBreadcrumbContext()
     const seo = getSeoContext()
@@ -23,33 +28,62 @@
         seo.ogFeatures = ['scoped:class', 'Compound', 'Combinator', 'Marker']
         seo.ogSlug = 'examples-compound-selector'
     }
+
+    const sections: ExampleSection[] = [
+        {
+            figId: 'FIG-001',
+            tag: 'COMPOUND',
+            title: { prefix: 'compound ', accent: 'selectors', end: '.' },
+            description:
+                "Toggling a conditionally-added class gates a compound rule (.page-rows.paged) on the same child element. The synthesized marker also keeps a descendant-combinator rule alive, so neither survives Svelte's unused-CSS pruning by accident.",
+            snippet: defaultSection,
+            codeSnippet: defaultCode,
+            barCells: [
+                { k: 'syntax', v: 'scoped:class' },
+                { k: 'selector', v: 'compound' },
+                { k: 'status', v: 'passing' }
+            ],
+            sourceUrl: exampleSourceUrl('scoped-props/demos/CompoundSelector.svelte')
+        }
+    ]
 </script>
 
-{#snippet code()}
+{#snippet defaultSection()}
+    <CompoundSelector />
+{/snippet}
+
+{#snippet defaultCode()}
     <CodeReferenceV2
-        samples={demoCodeSamples(
-            'scoped-props/demos/CompoundSelector.svelte',
-            'compound-selector',
-            'CompoundSelector.svelte'
-        )}
+        samples={[
+            demoCodeSample(
+                'scoped-props/demos/CompoundSelector.svelte',
+                'compound-selector',
+                'CompoundSelector.svelte'
+            ),
+            demoCodeSample(
+                'scoped-props/demos/components/ChildCard.svelte',
+                'compound-selector-child-card',
+                'ChildCard.svelte'
+            )
+        ]}
         columns={2}
     />
 {/snippet}
 
-<ExampleV2
-    figId="FIG-001"
-    tag="COMPOUND"
-    title={{ prefix: 'compound ', accent: 'selectors', end: '.' }}
-    description="Toggling a conditionally-added class gates a compound rule (.page-rows.paged) on the same child element. The synthesized marker also keeps a descendant-combinator rule alive, so neither survives Svelte's unused-CSS pruning by accident."
-    sheetLabel="SHEET 01 / 01"
-    barCells={[
-        { k: 'syntax', v: 'scoped:class' },
-        { k: 'selector', v: 'compound' },
-        { k: 'status', v: 'passing' }
-    ]}
-    sourceUrl={exampleSourceUrl('scoped-props/demos/CompoundSelector.svelte')}
-    codeSnippet={code}
-    codeLabel="show code"
->
-    <CompoundSelector />
-</ExampleV2>
+{#each sections as section, i (section.figId)}
+    <ExampleV2
+        figId={section.figId}
+        tag={section.tag}
+        title={section.title}
+        description={section.description}
+        mode={section.mode ?? 'live'}
+        sheetLabel={formatSheetLabel(i, sections.length)}
+        barCells={section.barCells}
+        sourceUrl={section.sourceUrl}
+        codeSnippet={section.codeSnippet}
+        codeLabel="show code"
+        notes={section.notes}
+    >
+        {@render section.snippet()}
+    </ExampleV2>
+{/each}

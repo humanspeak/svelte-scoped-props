@@ -1,10 +1,15 @@
 <script lang="ts">
     import { getBreadcrumbContext } from '$lib/components/contexts/Breadcrumb/Breadcrumb.context'
     import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-    import { demoCodeSamples } from '$lib/demo-code-samples'
+    import { demoCodeSample } from '$lib/demo-loaders'
     import { exampleSourceUrl } from '$lib/docs-config'
     import PlainClassBoundary from '$lib/examples/scoped-props/demos/PlainClassBoundary.svelte'
-    import { CodeReferenceV2, ExampleV2 } from '@humanspeak/docs-kit'
+    import {
+        CodeReferenceV2,
+        ExampleV2,
+        formatSheetLabel,
+        type ExampleSection
+    } from '@humanspeak/docs-kit'
 
     const breadcrumbs = getBreadcrumbContext()
     const seo = getSeoContext()
@@ -23,33 +28,62 @@
         seo.ogFeatures = ['Class Boundary', 'No Magic', 'Parent Scope', 'Limit']
         seo.ogSlug = 'examples-plain-class-boundary'
     }
+
+    const sections: ExampleSection[] = [
+        {
+            figId: 'FIG-001',
+            tag: 'BOUNDARY',
+            title: { prefix: 'plain class ', accent: 'boundary', end: '.' },
+            description:
+                'Plain `class` on a component is still just a prop. This example keeps the failure visible so the package does not pretend Svelte can infer intent from a normal prop name.',
+            snippet: defaultSection,
+            codeSnippet: defaultCode,
+            barCells: [
+                { k: 'syntax', v: 'class' },
+                { k: 'value', v: 'string literal' },
+                { k: 'status', v: 'blocked' }
+            ],
+            sourceUrl: exampleSourceUrl('scoped-props/demos/PlainClassBoundary.svelte')
+        }
+    ]
 </script>
 
-{#snippet code()}
+{#snippet defaultSection()}
+    <PlainClassBoundary />
+{/snippet}
+
+{#snippet defaultCode()}
     <CodeReferenceV2
-        samples={demoCodeSamples(
-            'scoped-props/demos/PlainClassBoundary.svelte',
-            'plain-class-boundary',
-            'PlainClassBoundary.svelte'
-        )}
+        samples={[
+            demoCodeSample(
+                'scoped-props/demos/PlainClassBoundary.svelte',
+                'plain-class-boundary',
+                'PlainClassBoundary.svelte'
+            ),
+            demoCodeSample(
+                'scoped-props/demos/components/ChildCard.svelte',
+                'plain-class-boundary-child-card',
+                'ChildCard.svelte'
+            )
+        ]}
         columns={2}
     />
 {/snippet}
 
-<ExampleV2
-    figId="FIG-001"
-    tag="BOUNDARY"
-    title={{ prefix: 'plain class ', accent: 'boundary', end: '.' }}
-    description="Plain `class` on a component is still just a prop. This example keeps the failure visible so the package does not pretend Svelte can infer intent from a normal prop name."
-    sheetLabel="SHEET 01 / 01"
-    barCells={[
-        { k: 'syntax', v: 'class' },
-        { k: 'value', v: 'string literal' },
-        { k: 'status', v: 'blocked' }
-    ]}
-    sourceUrl={exampleSourceUrl('scoped-props/demos/PlainClassBoundary.svelte')}
-    codeSnippet={code}
-    codeLabel="show code"
->
-    <PlainClassBoundary />
-</ExampleV2>
+{#each sections as section, i (section.figId)}
+    <ExampleV2
+        figId={section.figId}
+        tag={section.tag}
+        title={section.title}
+        description={section.description}
+        mode={section.mode ?? 'live'}
+        sheetLabel={formatSheetLabel(i, sections.length)}
+        barCells={section.barCells}
+        sourceUrl={section.sourceUrl}
+        codeSnippet={section.codeSnippet}
+        codeLabel="show code"
+        notes={section.notes}
+    >
+        {@render section.snippet()}
+    </ExampleV2>
+{/each}
