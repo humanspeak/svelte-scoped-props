@@ -11,7 +11,7 @@ fully before starting, honor its STOP conditions, and update your row when done.
 | 001  | Keep compound selectors of scoped classes from being pruned           | P1       | S      | —          | DONE (guard PASS at 74ecd0e, branch advisor/001-compound-scoped-classes) |
 | 002  | Synthesize marker structure per selector (typed + combinator support) | P2       | M      | 001        | DONE (guard PASS at 9e266e5 after post-review fix; branch advisor/002-structural-marker-synthesis) |
 | 003  | Document structural marker behavior + compound-selector example       | P2       | M      | 002        | DONE (guard PASS at bcfb645, branch advisor/003-docs-and-example) |
-| 004  | Mask CSS comments; render marker nodes as svelte:element              | P1       | M      | 002, 003   | IN PROGRESS (adversarial review of PR #12: commented selectors pruned, a11y warning leak, content-model compile errors) |
+| 004  | Mask CSS comments; render marker nodes as svelte:element              | P1       | M      | 002, 003   | DONE (guard PASS at 14501d7; fixes PR #12 adversarial-review findings + content-model errors) |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
 
