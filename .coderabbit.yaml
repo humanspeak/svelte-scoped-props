@@ -48,7 +48,9 @@ reviews:
           instructions: Apply to accessibility improvements (a11y, keyboard, screen readers)
         - label: breaking-change
           instructions: Apply to changes that break backward compatibility
-    path_filters: []
+    path_filters:
+        # Agent plan/guard records — internal working documents, skip review
+        - '!.agents/.plans/**'
     path_instructions:
         - path: src/lib/utils/**/*.ts
           instructions: Ensure all exported functions use arrow function syntax (const fn = () => {}). All functions must have comprehensive JSDoc comments with @param, @returns, and @example tags. Verify type safety and check for potential ReDoS vulnerabilities in regex patterns.
