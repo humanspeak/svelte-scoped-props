@@ -110,7 +110,9 @@ span.a + button.b{color:purple}
             { filename }
         )
 
-        expect(result.code).toContain('<div class="page-rows paged"></div>')
+        expect(result.code).toContain(
+            `<svelte:element this={'x'} class="page-rows paged"></svelte:element>`
+        )
         expect(result.code).toContain('.page-rows.page-rows.paged.paged{min-height:61px}')
     })
 
@@ -130,16 +132,21 @@ span.a + button.b{color:purple}
         expect(compiled.css?.code).not.toContain('(unused)')
     })
 
-    it('renders final void marker nodes self-closing', () => {
-        const result = transformScopedProps(
-            `<script>import Child from './Child.svelte';</script>
+    it('keeps single void-element selectors via the dynamic fallback node', async () => {
+        const source = `<script>import Child from './Child.svelte';</script>
 <Child scoped:class="a" />
-<style>input.a{color:red}</style>`,
-            { filename }
-        )
+<style>input.a{color:red}</style>`
+        const processed = await preprocess(source, scopedProps(), { filename })
+        const compiled = compile(processed.code, {
+            filename,
+            generate: 'client',
+            warningFilter: () => false
+        })
 
-        expect(result.code).toContain('<input class="a" />')
-        expect(result.code).not.toContain('</input>')
+        expect(processed.code).toContain(`<svelte:element this={'x'} class="a"></svelte:element>`)
+        expect(processed.code).not.toContain('<input')
+        expect(compiled.css?.code).toContain('input.a.a')
+        expect(compiled.css?.code).not.toContain('(unused)')
     })
 
     it('strips pseudo-classes and pseudo-elements when synthesizing marker chains', () => {
@@ -150,10 +157,12 @@ span.a + button.b{color:purple}
             { filename }
         )
 
-        expect(result.code).toContain('<div class="a"><div class="b"></div></div>')
+        expect(result.code).toContain(
+            `<svelte:element this={'x'} class="a"><svelte:element this={'x'} class="b"></svelte:element></svelte:element>`
+        )
     })
 
-    it('skips selectors with attribute selectors but keeps the fallback div', () => {
+    it('skips selectors with attribute selectors but keeps the fallback node', () => {
         const result = transformScopedProps(
             `<script>import Child from './Child.svelte';</script>
 <Child scoped:class="a b" />
@@ -163,7 +172,7 @@ span.a + button.b{color:purple}
 
         const marker = result.code.slice(result.code.indexOf('{#snippet'))
         expect(marker).not.toContain('data-x')
-        expect(marker).toContain('<div class="a"></div>')
+        expect(marker).toContain(`<svelte:element this={'x'} class="a"></svelte:element>`)
     })
 
     it('skips :global selectors when synthesizing marker chains', () => {
@@ -175,41 +184,52 @@ span.a + button.b{color:purple}
         )
 
         expect(result.code.split('{#snippet').length - 1).toBe(1)
-        expect(result.code).not.toContain('<div class="a"><div')
+        // Only the all-classes fallback node — no synthesized chain for :global.
+        expect(result.code.split('<svelte:element').length - 1).toBe(1)
     })
 
-    it('deduplicates identical synthesized marker chains', () => {
+    it('deduplicates synthesized marker chains across type-agnostic selectors', () => {
         const result = transformScopedProps(
             `<script>import Child from './Child.svelte';</script>
 <Child scoped:class="a b" />
-<style>.a .b{color:red}.a .b:hover{color:blue}</style>`,
+<style>.a .b{color:red}.a .b:hover{color:blue}p.a p.b{color:green}</style>`,
             { filename }
         )
 
-        const chain = '<div class="a"><div class="b"></div></div>'
+        const chain = `<svelte:element this={'x'} class="a"><svelte:element this={'x'} class="b"></svelte:element></svelte:element>`
         expect(result.code.split(chain).length - 1).toBe(1)
     })
 
-    it('skips selectors with a void element in a non-final compound', () => {
-        const result = transformScopedProps(
-            `<script>import Child from './Child.svelte';</script>
+    it('keeps void-in-non-final-compound chains via dynamic marker nodes', async () => {
+        const source = `<script>import Child from './Child.svelte';</script>
 <Child scoped:class="a b" />
-<style>input.a .b{color:red}</style>`,
-            { filename }
-        )
+<style>input.a .b{color:red}</style>`
+        const processed = await preprocess(source, scopedProps(), { filename })
+        const compiled = compile(processed.code, {
+            filename,
+            generate: 'client',
+            warningFilter: () => false
+        })
 
-        expect(result.code).not.toContain('<input')
+        expect(processed.code).not.toContain('<input')
+        expect(compiled.css?.code).toContain('input.a.a')
+        expect(compiled.css?.code).not.toContain('(unused)')
     })
 
-    it('synthesizes marker chains for custom element type selectors', () => {
-        const result = transformScopedProps(
-            `<script>import Child from './Child.svelte';</script>
+    it('keeps custom-element type selectors via the dynamic fallback node', async () => {
+        const source = `<script>import Child from './Child.svelte';</script>
 <Child scoped:class="a" />
-<style>my-widget.a{color:red}</style>`,
-            { filename }
-        )
+<style>my-widget.a{color:red}</style>`
+        const processed = await preprocess(source, scopedProps(), { filename })
+        const compiled = compile(processed.code, {
+            filename,
+            generate: 'client',
+            warningFilter: () => false
+        })
 
-        expect(result.code).toContain('<my-widget class="a">')
+        expect(processed.code).not.toContain('<my-widget')
+        expect(compiled.css?.code).toContain('my-widget.a.a')
+        expect(compiled.css?.code).not.toContain('(unused)')
     })
 
     it('rejects scoped props on native elements', () => {
@@ -230,7 +250,8 @@ span.a + button.b{color:purple}
             warningFilter: () => false
         })
 
-        expect(compiled.css?.code).toContain('.a.a .b.b')
+        expect(compiled.css?.code).toContain('.a.a')
+        expect(compiled.css?.code).toContain('.b.b')
         expect(compiled.css?.code).not.toContain('(unused)')
     })
 

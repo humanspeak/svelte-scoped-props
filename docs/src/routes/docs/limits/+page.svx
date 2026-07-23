@@ -54,12 +54,15 @@ collected into an object, then forward the transformed prop normally.
 
 By default, the transform adds an uncalled snippet marker so Svelte keeps the parent
 CSS selectors alive during CSS analysis. The marker is synthesized from the component's
-own selectors: for each scoped selector it emits an element chain that mirrors the
-selector's structure (real tags where the selector names them, nested elements for
-descendant and child combinators, adjacent siblings for `+` and `~`, pseudo-classes
-stripped, and any final void element self-closing), plus a flat fallback `<div>` that
-carries every scoped class at once. The marker does not render, but it can leave a small
-unused function in compiled output.
+own selectors: for each scoped selector that has a combinator it emits a chain of
+`<svelte:element this={'x'}>` nodes that mirrors the selector's structure (nested
+elements for descendant and child combinators, adjacent siblings for `+` and `~`,
+pseudo-classes stripped), plus a flat fallback `<svelte:element>` that carries every
+scoped class at once. Because the marker nodes are dynamically typed, Svelte's pruner
+matches them against any element-qualified selector and they carry no element
+content-model or void constraints, so single-compound selectors are defended by the
+fallback alone. The marker does not render, but it can leave a small unused function in
+compiled output.
 
 ```ts
 scopedProps({ marker: false })
@@ -77,20 +80,17 @@ pruning and keep the correct scope hash:
 - Compound classes on one element, such as `.page-rows.paged`.
 - Descendant, child, and sibling combinators, such as `.a .b`, `.a > .b`, and
   `span.a + button.b`.
-- Element-qualified compounds, including custom elements, such as `button.foo` or
-  `my-widget.bar`.
-- A void element in the final position of a chain (it is emitted self-closing).
+- Any element-qualified selector, including void and custom elements, such as
+  `button.foo`, `input.bar`, or `my-widget.baz` — the marker element is dynamically
+  typed, so it matches any type and has no void or content-model constraints.
 
-These forms are not matched — only the flat fallback `<div>` defends them, so their
+These forms are not matched — only the flat fallback element defends them, so their
 structural shape can still be pruned:
 
 - Selectors containing attribute selectors, such as `.a[data-open]`.
 - A `:global(...)` compound sitting inside a chain.
 - Functional or positional pseudo-classes such as `:has()`, `:nth-child()`, and
   `:not()` — pseudos are stripped, not matched.
-- Type selectors in the reserved set `{html, body, head, title, meta, link, script,
-  style, slot}`.
-- Void elements in any non-final position of a chain.
 
 ## Style block is exempt from unused-CSS pruning
 

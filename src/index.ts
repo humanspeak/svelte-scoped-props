@@ -591,40 +591,15 @@ function addCssMarkerSnippet(source: string): string {
 
     const snippetName = uniqueSnippetName(source)
     const chains = readMarkerChains(source).join('')
-    const fallback = `<div class="${classes.join(' ')}"></div>`
+    const fallback = `<svelte:element this={'x'} class="${classes.join(' ')}"></svelte:element>`
     const marker = `\n{#snippet ${snippetName}()}${chains}${fallback}{/snippet}\n`
 
     return `${source}${marker}`
 }
 
 type SelectorCompound = { type: string | null; classes: string[] }
-type MarkerNode = { tag: string; classes: string[]; children: MarkerNode[] }
+type MarkerNode = { classes: string[]; children: MarkerNode[] }
 type SelectorCombinator = 'descendant' | 'child' | 'sibling'
-
-const UNSYNTHESIZABLE_TYPES = new Set([
-    'html',
-    'body',
-    'head',
-    'title',
-    'meta',
-    'link',
-    'script',
-    'style',
-    'slot'
-])
-const VOID_TYPES = new Set([
-    'area',
-    'base',
-    'br',
-    'col',
-    'embed',
-    'hr',
-    'img',
-    'input',
-    'source',
-    'track',
-    'wbr'
-])
 
 function readMarkerChains(source: string): string[] {
     const chains = new Set<string>()
@@ -633,7 +608,7 @@ function readMarkerChains(source: string): string[] {
         mapCssPreludes(css, (prelude) => {
             if (prelude.trimStart().startsWith('@')) return prelude
 
-            for (const selector of splitTopLevelSelectors(prelude)) {
+            for (const selector of splitTopLevelSelectors(stripCssComments(prelude))) {
                 const chain = synthesizeSelectorChain(selector)
                 if (chain !== null) chains.add(chain)
             }
@@ -680,21 +655,15 @@ function synthesizeSelectorChain(selector: string): string | null {
         parsed.push(result)
     }
 
-    for (const [index, compound] of parsed.entries()) {
-        const type = compound.type
-        if (type === null) continue
-
-        const lower = type.toLowerCase()
-        if (UNSYNTHESIZABLE_TYPES.has(lower)) return null
-        if (VOID_TYPES.has(lower) && index < parsed.length - 1) return null
-    }
+    // Single-compound selectors (typed or not) are defended by the dynamic
+    // all-classes fallback node, so they never need a synthesized chain.
+    if (parsed.length === 1) return null
 
     const roots: MarkerNode[] = []
     let path: MarkerNode[] = []
 
     for (const [index, compound] of parsed.entries()) {
         const node: MarkerNode = {
-            tag: compound.type ?? 'div',
             classes: compound.classes,
             children: []
         }
@@ -721,11 +690,6 @@ function synthesizeSelectorChain(selector: string): string | null {
             if (parent) parent.children.push(node)
             path.push(node)
         }
-    }
-
-    const root = roots[0]
-    if (roots.length === 1 && root && root.tag === 'div' && root.children.length === 0) {
-        return null
     }
 
     return roots.map(renderMarkerNode).join('')
@@ -845,12 +809,9 @@ function parseSelectorCompound(compound: string): SelectorCompound | null {
 
 function renderMarkerNode(node: MarkerNode): string {
     const classAttribute = node.classes.length > 0 ? ` class="${node.classes.join(' ')}"` : ''
-
-    if (VOID_TYPES.has(node.tag.toLowerCase())) return `<${node.tag}${classAttribute} />`
-
     const children = node.children.map(renderMarkerNode).join('')
 
-    return `<${node.tag}${classAttribute}>${children}</${node.tag}>`
+    return `<svelte:element this={'x'}${classAttribute}>${children}</svelte:element>`
 }
 
 function boostScopedStyleSpecificity(source: string, classNames: Set<string>): string {
@@ -923,10 +884,14 @@ function stripQuotedSections(text: string): string {
     return text.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, (match) => ' '.repeat(match.length))
 }
 
+function stripCssComments(text: string): string {
+    return text.replace(/\/\*[\s\S]*?(?:\*\/|$)/g, (match) => ' '.repeat(match.length))
+}
+
 function boostSelectorPrelude(prelude: string, classNames: Set<string>): string {
     if (prelude.trimStart().startsWith('@')) return prelude
 
-    const scannable = stripQuotedSections(prelude)
+    const scannable = stripCssComments(stripQuotedSections(prelude))
     const pattern = /\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)/g
     let output = ''
     let cursor = 0
@@ -977,7 +942,7 @@ function readCssClassNames(source: string): Set<string> {
         mapCssPreludes(css, (prelude) => {
             if (prelude.trimStart().startsWith('@')) return prelude
 
-            const scannable = stripQuotedSections(prelude)
+            const scannable = stripCssComments(stripQuotedSections(prelude))
             let match: RegExpExecArray | null
 
             classPattern.lastIndex = 0

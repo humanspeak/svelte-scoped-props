@@ -164,18 +164,21 @@ The preprocessor can rewrite the prop:
 but the selector still is not attached to a local element in the parent component's
 markup. Outside core, the package has to preserve the parent selector by adding an
 uncalled snippet marker. The marker is derived per selector, so a compound rule like
-`.parent-owned.dimmed` yields a single marker `<div>` that carries both classes:
+`.parent-owned.dimmed` yields a single marker node that carries both classes:
 
 ```svelte
 {#snippet __svelte_scoped_props_marker()}
-    <div class="parent-owned dimmed"></div>
+    <svelte:element this={'x'} class="parent-owned dimmed"></svelte:element>
 {/snippet}
 ```
 
-The snippet is never called, so that `<div>` never renders. It only gives Svelte's CSS
+The snippet is never called, so that node never renders. It only gives Svelte's CSS
 analysis a local class usage to see, which keeps the selector alive and lets Svelte add
 the correct scope hash. Combinator selectors are mirrored the same way — `.a .b` becomes
-a nested pair of marker divs — so compound and combinator scoped rules survive pruning.
+a nested pair of marker nodes — so compound and combinator scoped rules survive pruning.
+The nodes are `<svelte:element>` rather than typed tags, so the marker is dynamically
+typed: Svelte's pruner matches it against any element-qualified selector, and it carries
+no void or content-model constraints.
 
 That marker is an implementation scar. Native support would already know that
 `scoped:class` is intentionally exporting a parent-scoped class through a component
