@@ -10,7 +10,7 @@ wiring). Reference consumer: `humanspeak/svelte-markdown`.
 | Plan | Title                                             | Priority | Effort | Depends on | Status |
 | ---- | ------------------------------------------------- | -------- | ------ | ---------- | ------ |
 | 001  | Adopt docs-kit 2026.7.6 features for parity       | P2       | S/M    | —          | DONE (guard PASS at 42abd88; IndexNow + PagerV2 + verify-only items; exampleMirrors deferred → 002) |
-| 002  | Restructure example pages to sections pattern     | P3       | M      | 001        | TODO (not yet authored — migration of 8 example routes to `const sections` + per-slug demo folders so exampleMirrorsPlugin can parse them; see 001's revision note) |
+| 002  | Restructure example pages to sections pattern     | P3       | M      | 001        | DONE (guard PASS at e7efd2c; in-place Path A after investigation disproved per-slug premise; wrapper/map retired per rev2; full 2026.7.6 parity reached) |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
 
