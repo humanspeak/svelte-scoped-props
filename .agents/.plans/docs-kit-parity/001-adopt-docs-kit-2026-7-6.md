@@ -20,6 +20,19 @@
 - **Category**: dx / docs
 - **Planned at**: commit `daeb304` (branch `chore/package-updates`), 2026-07-23
 
+> Revision 2026-07-23 (post-execution): Step 1 (exampleMirrorsPlugin) hit its
+> STOP condition and is DEFERRED, not done. The plugin hard-requires the
+> `const sections: ExampleSection[]` + `{#each}` page structure and per-slug
+> demo folders (`src/lib/examples/<slug>/demos/`) that svelte-markdown and
+> svelte-motion use; our example pages use inline `<ExampleV2 …/>` props and a
+> shared `scoped-props/demos/` folder, so the plugin's parser throws
+> (`Could not find const sections array`). Adopting it means restructuring
+> all 8 example routes to the sections pattern — a real migration, written up
+> as plan 002 in this batch. The plan's docs-check baseline (7/6) also
+> undercounted pre-existing errors: true pre-change baseline is 10 errors /
+> 6 warnings (paraglide's absence cascades 4 errors, not 2, plus an
+> independent posthog env-typing error). Steps 2-5 completed and verified.
+
 ## Why this matters
 
 The docs-kit `2026.6.9 → 2026.7.6` bump (18 commits) landed passively — the
