@@ -77,6 +77,15 @@ jobs:
             - name: Build package
               run: pnpm build
 
+            # The docs module graph reaches repo-root files (the version badge
+            # imports the root package.json; the workspace symlink pulls in
+            # dist/). Their nearest tsconfig is the root app's, which extends
+            # the generated .svelte-kit/tsconfig.json — vite 8.1/rolldown
+            # hard-errors if that extends target is missing, so sync the root
+            # app before building docs.
+            - name: Sync root SvelteKit app
+              run: pnpm run sync
+
             - name: Build docs
               working-directory: docs
               env:

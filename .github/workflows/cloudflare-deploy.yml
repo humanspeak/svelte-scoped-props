@@ -48,6 +48,12 @@ jobs:
             - name: Build Package
               run: pnpm run build
 
+            # Same requirement as pr-build's docs job: the docs build resolves
+            # repo-root modules whose tsconfig extends the generated root
+            # .svelte-kit/tsconfig.json; vite 8.1/rolldown errors without it.
+            - name: Sync root SvelteKit app
+              run: pnpm run sync
+
             # The sitemap manifest was previously generated here by a
             # standalone script. It now emits from
             # `sitemapManifestPlugin` (docs-kit) in `docs/vite.config.ts`,
