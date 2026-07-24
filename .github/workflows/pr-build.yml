@@ -35,7 +35,7 @@ jobs:
         timeout-minutes: 10
         steps:
             - name: Checkout
-              uses: actions/checkout@v6 # zizmor: ignore[unpinned-uses]
+              uses: actions/checkout@v7 # zizmor: ignore[unpinned-uses]
               with:
                   persist-credentials: false
                   fetch-depth: 1
@@ -43,7 +43,7 @@ jobs:
             - uses: pnpm/action-setup@v6 # zizmor: ignore[unpinned-uses]
 
             - name: Use Node.js - 24
-              uses: actions/setup-node@v6 # zizmor: ignore[unpinned-uses]
+              uses: actions/setup-node@v7 # zizmor: ignore[unpinned-uses]
               with:
                   node-version: 24
 
@@ -59,7 +59,7 @@ jobs:
         timeout-minutes: 15
         steps:
             - name: Checkout
-              uses: actions/checkout@v6 # zizmor: ignore[unpinned-uses]
+              uses: actions/checkout@v7 # zizmor: ignore[unpinned-uses]
               with:
                   persist-credentials: false
                   fetch-depth: 1
@@ -67,7 +67,7 @@ jobs:
             - uses: pnpm/action-setup@v6 # zizmor: ignore[unpinned-uses]
 
             - name: Use Node.js - 24
-              uses: actions/setup-node@v6 # zizmor: ignore[unpinned-uses]
+              uses: actions/setup-node@v7 # zizmor: ignore[unpinned-uses]
               with:
                   node-version: 24
 
@@ -76,6 +76,15 @@ jobs:
 
             - name: Build package
               run: pnpm build
+
+            # The docs module graph reaches repo-root files (the version badge
+            # imports the root package.json; the workspace symlink pulls in
+            # dist/). Their nearest tsconfig is the root app's, which extends
+            # the generated .svelte-kit/tsconfig.json — vite 8.1/rolldown
+            # hard-errors if that extends target is missing, so sync the root
+            # app before building docs.
+            - name: Sync root SvelteKit app
+              run: pnpm run sync
 
             - name: Build docs
               working-directory: docs

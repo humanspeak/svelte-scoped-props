@@ -1,6 +1,8 @@
 import {
     demoManifestPlugin,
     docMirrorsPlugin,
+    exampleMirrorsPlugin,
+    indexNowPlugin,
     llmsFullPlugin,
     llmsPlugin,
     sitemapManifestPlugin,
@@ -17,6 +19,12 @@ import devtoolsJson from 'vite-plugin-devtools-json'
 import { docsConfig } from './src/lib/docs-config'
 
 // const __filename = fileURLToPath(import.meta.url)
+
+// IndexNow submission key for THIS site. IndexNow keys are public by
+// protocol design (the key is served verbatim at `/<key>.txt`), so inlining
+// it here — matching svelte-markdown's pattern — is intentional, not a leak.
+// This UUID is unique to scoped.svelte.page; do not copy it to sibling repos.
+const indexNowKey = '34c0a202-56db-44a1-8776-146bc8ff8e99'
 
 export default defineConfig({
     plugins: [
@@ -48,6 +56,25 @@ export default defineConfig({
         // `siteUrl` controls the `<!-- Source: ... -->` header in each
         // mirror, which is the citation surface for ChatGPT / Perplexity.
         docMirrorsPlugin({ siteUrl: docsConfig.url }),
+        // Scans `src/routes/examples/<slug>/+page.svelte` for the docs-kit
+        // `const sections: ExampleSection[]` pattern and emits an LLM-readable
+        // Markdown mirror per example to `static/examples/<slug>.md` (plus a
+        // `static/examples.md` index) on `buildStart`. Each mirror inlines the
+        // demo's runnable Svelte source — followed through the demo's relative
+        // `.svelte` imports — so coding agents can fetch working examples
+        // without scraping the interactive UI. `sourceBaseUrl` turns each
+        // inlined file into a GitHub deep-link back to `docs/`. All our demos
+        // key off the shared `scoped-props/demos/` folder, so that folder is
+        // the import-walk root and shared components (e.g. ChildCard) mirror
+        // correctly for every route that imports them.
+        //
+        // Register AFTER `docMirrorsPlugin` for parity with the sibling repos
+        // (svelte-motion / svelte-markdown) and so mirror generation runs in a
+        // stable order alongside the other docs-kit emitters.
+        exampleMirrorsPlugin({
+            siteUrl: docsConfig.url,
+            sourceBaseUrl: 'https://github.com/humanspeak/svelte-scoped-props/blob/main/docs'
+        }),
         // Emits `static/llms.txt` (the llmstxt.org-convention discovery
         // index) and `static/llms-full.txt` (concatenated dump for
         // "paste the whole library" workflows like Claude Code / Cursor).
@@ -78,6 +105,22 @@ export default defineConfig({
             defaultDescription:
                 'Spring physics, gestures, layout animations, exit animations, and scroll effects with a familiar declarative API.',
             defaultFeatures: docsConfig.defaultFeatures
+        }),
+        // Pings IndexNow (Bing, Yandex, et al.) with the sitemap manifest's
+        // URLs after a production build so search engines re-crawl changed
+        // pages promptly. `productionMode: 'indexnow'` gates the ping to
+        // builds run with `--mode indexnow` only — `pnpm dev` and ordinary
+        // `vite build` never submit — and the key is served verbatim from
+        // `static/<key>.txt`. Register last among the docs-kit plugins so it
+        // reads the freshly-written `sitemap-manifest.json`.
+        indexNowPlugin({
+            siteUrl: docsConfig.url,
+            key: indexNowKey,
+            productionMode: 'indexnow',
+            // IndexNow is a best-effort search-engine ping; a rejected
+            // submission (e.g. a transient 403) must not fail the build and
+            // block the docs deploy. Log and continue instead.
+            failOnError: false
         }),
         svelteMotionOptimize(),
         tailwindcss(),

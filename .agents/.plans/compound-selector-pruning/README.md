@@ -39,8 +39,12 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
   `prefer-const` on every `let x = $derived(...)` demo — possibly a
   rune-awareness bug in the processor worth investigating. Candidate plan 005.
 - `docs` script `examples-catalog:sync` is dead — it scans `examples/+page.ts`
-  for a catalog object that was refactored out; the hardcoded `exampleCases`
-  array in `+page.svelte` is the only example registry.
+  for a catalog object that was refactored out; the example registry is now
+  `$lib/examplesIndex.ts` (docs-kit-parity plan 001).
+- Cross-batch note (per plan 003's maintenance note): `demoCodeDependencies`
+  and `demo-code-samples.ts` were retired by docs-kit-parity plan 002 (rev2) —
+  pages now list `demoCodeSample` panels inline from `$lib/demo-loaders`. Plan
+  003's registration step for new examples is superseded accordingly.
 
 ## Findings considered and rejected / deferred
 

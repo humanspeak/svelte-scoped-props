@@ -1,10 +1,15 @@
 <script lang="ts">
     import { getBreadcrumbContext } from '$lib/components/contexts/Breadcrumb/Breadcrumb.context'
     import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-    import { demoCodeSamples } from '$lib/demo-code-samples'
+    import { demoCodeSample } from '$lib/demo-loaders'
     import { exampleSourceUrl } from '$lib/docs-config'
     import DynamicClassValue from '$lib/examples/scoped-props/demos/DynamicClassValue.svelte'
-    import { CodeReferenceV2, ExampleV2 } from '@humanspeak/docs-kit'
+    import {
+        CodeReferenceV2,
+        ExampleV2,
+        formatSheetLabel,
+        type ExampleSection
+    } from '@humanspeak/docs-kit'
 
     const breadcrumbs = getBreadcrumbContext()
     const seo = getSeoContext()
@@ -23,33 +28,62 @@
         seo.ogFeatures = ['ClassValue', 'Derived State', 'Toggle', 'Object Map']
         seo.ogSlug = 'examples-dynamic-class-value'
     }
+
+    const sections: ExampleSection[] = [
+        {
+            figId: 'FIG-001',
+            tag: 'CLASSVALUE',
+            title: { prefix: 'dynamic ', accent: 'ClassValue', end: '.' },
+            description:
+                'The stateful case: arrays and object maps can change after hydration, and the runtime helper keeps the parent hash attached to the computed class string.',
+            snippet: defaultSection,
+            codeSnippet: defaultCode,
+            barCells: [
+                { k: 'syntax', v: 'scoped:class' },
+                { k: 'value', v: 'ClassValue' },
+                { k: 'status', v: 'passing' }
+            ],
+            sourceUrl: exampleSourceUrl('scoped-props/demos/DynamicClassValue.svelte')
+        }
+    ]
 </script>
 
-{#snippet code()}
+{#snippet defaultSection()}
+    <DynamicClassValue />
+{/snippet}
+
+{#snippet defaultCode()}
     <CodeReferenceV2
-        samples={demoCodeSamples(
-            'scoped-props/demos/DynamicClassValue.svelte',
-            'dynamic-class-value',
-            'DynamicClassValue.svelte'
-        )}
+        samples={[
+            demoCodeSample(
+                'scoped-props/demos/DynamicClassValue.svelte',
+                'dynamic-class-value',
+                'DynamicClassValue.svelte'
+            ),
+            demoCodeSample(
+                'scoped-props/demos/components/ChildCard.svelte',
+                'dynamic-class-value-child-card',
+                'ChildCard.svelte'
+            )
+        ]}
         columns={2}
     />
 {/snippet}
 
-<ExampleV2
-    figId="FIG-001"
-    tag="CLASSVALUE"
-    title={{ prefix: 'dynamic ', accent: 'ClassValue', end: '.' }}
-    description="The stateful case: arrays and object maps can change after hydration, and the runtime helper keeps the parent hash attached to the computed class string."
-    sheetLabel="SHEET 01 / 01"
-    barCells={[
-        { k: 'syntax', v: 'scoped:class' },
-        { k: 'value', v: 'ClassValue' },
-        { k: 'status', v: 'passing' }
-    ]}
-    sourceUrl={exampleSourceUrl('scoped-props/demos/DynamicClassValue.svelte')}
-    codeSnippet={code}
-    codeLabel="show code"
->
-    <DynamicClassValue />
-</ExampleV2>
+{#each sections as section, i (section.figId)}
+    <ExampleV2
+        figId={section.figId}
+        tag={section.tag}
+        title={section.title}
+        description={section.description}
+        mode={section.mode ?? 'live'}
+        sheetLabel={formatSheetLabel(i, sections.length)}
+        barCells={section.barCells}
+        sourceUrl={section.sourceUrl}
+        codeSnippet={section.codeSnippet}
+        codeLabel="show code"
+        notes={section.notes}
+    >
+        {@render section.snippet()}
+    </ExampleV2>
+{/each}
