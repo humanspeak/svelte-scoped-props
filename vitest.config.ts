@@ -10,6 +10,10 @@ export default defineConfig({
             '**/docs/**',
             '**/.trunk/**'
         ],
-        environment: 'node'
+        environment: 'node',
+        // junit feeds the trunk analytics uploader in CI (junit-vitest.xml
+        // matches the workflow's junit-paths)
+        reporters: process.env.CI ? ['default', 'junit'] : ['default'],
+        outputFile: { junit: 'junit-vitest.xml' }
     }
 })
