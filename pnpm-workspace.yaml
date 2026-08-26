@@ -2,7 +2,7 @@ packages:
     - .
     - docs
 allowBuilds:
-    '@humanspeak/docs-kit@https://codeload.github.com/humanspeak/docs-kit/tar.gz/a474a0725babdda6f267951a578d14289037b0cc': true
+    '@humanspeak/docs-kit@https://codeload.github.com/humanspeak/docs-kit/tar.gz/7f9018cb91c5497c7ebd2bfca2c28aab9e1116ae': true
     '@humanspeak/docs-kit': true
     core-js: true
     esbuild: true
