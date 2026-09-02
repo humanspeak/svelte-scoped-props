@@ -7,7 +7,7 @@ cli:
 plugins:
     sources:
         - id: trunk
-          ref: v1.10.2
+          ref: v1.11.0
           uri: https://github.com/trunk-io/plugins
 # Trunk runs Prettier from an isolated tool install, so include the plugins
 # named by docs/.prettierrc in that install.
@@ -33,6 +33,8 @@ runtimes:
         - node@22.16.0
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
+    disabled:
+        - actionlint
     ignore:
         - linters: [ALL]
           paths:
@@ -68,7 +70,6 @@ lint:
     enabled:
         - grype@0.116.0
         - sort-package-json@4.0.0
-        - actionlint@1.7.12
         - checkov@3.3.8
         - git-diff-check
         - markdownlint@0.49.1
@@ -81,6 +82,7 @@ lint:
         - taplo@0.10.0
         - trufflehog@3.95.9
         - yamllint@1.38.0
+        - zizmor@1.30.0
 actions:
     disabled:
         - trunk-announce
