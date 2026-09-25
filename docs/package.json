@@ -4,7 +4,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "tsx ./scripts/fetch-github-stats.ts && node ./scripts/generate-registry.mjs && vite build",
+        "build": "tsx ./scripts/fetch-github-stats.ts && node ./scripts/generate-registry.mjs && vite build && node ./scripts/check-favicon.mjs",
         "cf-typegen": "wrangler types src/worker-configuration.d.ts",
         "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -19,12 +19,14 @@
         "registry:generate": "node ./scripts/generate-registry.mjs",
         "registry:watch": "chokidar 'src/lib/shadcn/ui/**/*.svelte' 'src/lib/shadcn/ui/**/*.ts' -c 'node ./scripts/generate-registry.mjs' --initial --silent",
         "test": "npm run test:unit -- --run",
-        "test:unit": "vitest"
+        "test:unit": "vitest",
+        "check:favicon": "node ./scripts/check-favicon.mjs",
+        "generate:favicon": "node ./scripts/check-favicon.mjs --generate"
     },
     "dependencies": {
         "@fontsource-variable/inter": "^5.3.0",
         "@fontsource-variable/jetbrains-mono": "^5.3.0",
-        "@humanspeak/docs-kit": "github:humanspeak/docs-kit#2026.8.5",
+        "@humanspeak/docs-kit": "github:humanspeak/docs-kit#2026.9.3",
         "@humanspeak/svelte-markdown": "^1.8.5",
         "@humanspeak/svelte-motion": "^0.8.0",
         "@humanspeak/svelte-scoped-props": "workspace:*",
