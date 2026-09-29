@@ -7,6 +7,10 @@ export default defineConfig({
         command:
             'pnpm run build && pnpm run sync && pnpm exec vite dev --host 127.0.0.1 --port 4173 --strictPort',
         port: 4173,
+        // pnpm 12 runs scripts in their own process group, so Playwright's default
+        // SIGKILL of the server's group orphans the server and the run never exits.
+        // SIGTERM is forwarded by pnpm to the script.
+        gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 },
         reuseExistingServer: !process.env.CI,
         timeout: 120000,
         stdout: 'pipe',
