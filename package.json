@@ -61,7 +61,7 @@
     ],
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
-        "check": "pnpm run build && pnpm run test:unit && pnpm run test:pages:build",
+        "check": "pnpm run typecheck && pnpm run build && pnpm run test:unit && pnpm run test:pages:build",
         "dev": "pnpm run build && pnpm run sync && vite dev --host 127.0.0.1",
         "prepublishOnly": "pnpm run build && pnpm run test:unit",
         "preview": "vite preview --host 127.0.0.1",
@@ -72,7 +72,8 @@
         "test:e2e:debug": "playwright test --debug",
         "test:e2e:report": "playwright show-report",
         "test:pages:build": "pnpm run build && pnpm run sync && vite build",
-        "test:unit": "pnpm run build && pnpm run sync && vitest run"
+        "test:unit": "pnpm run build && pnpm run sync && vitest run",
+        "typecheck": "tsc --noEmit -p tsconfig.build.json"
     },
     "devDependencies": {
         "@playwright/test": "^1.61.1",
