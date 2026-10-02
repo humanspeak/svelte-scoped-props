@@ -4,6 +4,7 @@ export default defineConfig({
     test: {
         exclude: [
             '**/node_modules/**',
+            '**/.github/**',
             '**/dist/**',
             '**/.svelte-kit/**',
             '**/e2e/**',
