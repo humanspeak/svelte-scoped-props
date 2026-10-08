@@ -35,8 +35,8 @@
         "bits-ui": "^2.18.1",
         "flubber": "^0.4.2",
         "motion": "^12.42.2",
-        "posthog-js": "^1.406.2",
-        "posthog-node": "^5.46.0",
+        "posthog-js": "^1.438.1",
+        "posthog-node": "^5.55.0",
         "runed": "^0.37.1"
     },
     "devDependencies": {
