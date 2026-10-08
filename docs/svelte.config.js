@@ -79,7 +79,7 @@ const config = {
                     'self',
                     'https://*.ahrefs.com',
                     'https://*.posthog.com',
-                    'https://t.svelte.page',
+                    'https://j.svelte.page',
                     'unsafe-inline'
                 ],
                 'style-src': ['self', 'unsafe-inline'],
@@ -90,7 +90,7 @@ const config = {
                     'self',
                     'https://analytics.ahrefs.com',
                     'https://*.posthog.com',
-                    'https://t.svelte.page',
+                    'https://j.svelte.page',
                     'ws://localhost:*',
                     'ws://127.0.0.1:*'
                 ],
