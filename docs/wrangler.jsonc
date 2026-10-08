@@ -38,7 +38,10 @@
         "PUBLIC_SITE_URL": "https://scoped.svelte.page",
         "PUBLIC_ENVIRONMENT": "production",
         "ENVIRONMENT": "production",
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        // checkov:skip=CKV_SECRET_6: PostHog project tokens are public client-side SDK identifiers.
+        "PUBLIC_POSTHOG_PROJECT_TOKEN": "phc_upG3LY4wBQzjxatv4Sj8UaBx6PNksteueyQhH7ZSzNsV",
+        "PUBLIC_POSTHOG_HOST": "https://j.svelte.page"
     },
     "kv_namespaces": [
         {
