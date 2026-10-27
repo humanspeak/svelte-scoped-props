@@ -1,5 +1,5 @@
-import { env } from '$env/dynamic/public'
-import manifest from '$lib/sitemap-manifest.json'
+import manifest from '#lib/sitemap-manifest.json'
+import { PUBLIC_SITE_URL } from '$app/env/public'
 import type { RequestHandler } from '@sveltejs/kit'
 
 // Eager=false keeps build light; we only need the keys for paths
@@ -14,7 +14,7 @@ function toPath(file: string): string {
 }
 
 export const GET: RequestHandler = async ({ url }) => {
-    const base = (env.PUBLIC_SITE_URL || `${url.origin}`).replace(/\/$/, '')
+    const base = (PUBLIC_SITE_URL || `${url.origin}`).replace(/\/$/, '')
 
     // Unique, sorted, and exclude private/underscore folders
     const routes = [...new Set(pageFiles.map(toPath))]

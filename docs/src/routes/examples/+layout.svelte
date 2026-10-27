@@ -1,9 +1,9 @@
 <script lang="ts">
     import { enhanceCodeBlocks, ExampleLayoutV2 } from '@humanspeak/docs-kit'
     import { MotionConfig } from '@humanspeak/svelte-motion'
-    import favicon from '$lib/assets/logo.svg'
-    import ExamplePager from '$lib/components/general/ExamplePager.svelte'
-    import { docsConfig } from '$lib/docs-config'
+    import favicon from '#lib/assets/logo.svg'
+    import ExamplePager from '#lib/components/general/ExamplePager.svelte'
+    import { docsConfig } from '#lib/docs-config.js'
     import rootPkg from '../../../../package.json'
     import '@fontsource-variable/inter/index.css'
     import '@fontsource-variable/jetbrains-mono/index.css'

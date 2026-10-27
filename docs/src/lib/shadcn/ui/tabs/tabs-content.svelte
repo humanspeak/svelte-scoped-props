@@ -9,7 +9,7 @@
   tab switch — the panel container (and any styling on it) stays stable.
 -->
 <script lang="ts">
-    import { cn, type WithoutChildrenOrChild } from '$lib/shadcn/utils'
+    import { cn, type WithoutChildrenOrChild } from '#lib/shadcn/utils.js'
     import { MotionDiv } from '@humanspeak/svelte-motion'
     import { Tabs as TabsPrimitive, type TabsContentProps as BitsTabsContentProps } from 'bits-ui'
     import { getContext } from 'svelte'

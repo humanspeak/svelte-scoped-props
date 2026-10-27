@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { browser } from '$app/environment'
-    import { getBreadcrumbContext } from '$lib/components/contexts/Breadcrumb/Breadcrumb.context'
-    import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-    import { listExamples } from '$lib/examplesIndex'
+    import { browser } from '$app/env'
+    import { getBreadcrumbContext } from '#lib/components/contexts/Breadcrumb/Breadcrumb.context.js'
+    import { getSeoContext } from '#lib/components/contexts/Seo/Seo.context.js'
+    import { listExamples } from '#lib/examplesIndex.js'
     import { BrutIndexV2 } from '@humanspeak/docs-kit'
     import posthog from 'posthog-js'
 
@@ -25,7 +25,7 @@
         seo.ogSlug = 'examples'
     }
 
-    // Canonical example order lives in `$lib/examplesIndex` so the index grid
+    // Canonical example order lives in `#lib/examplesIndex.js` so the index grid
     // below and the per-page `PagerV2` (mounted in the examples layout) share
     // one source of truth and their `№` numbering always agrees.
     const exampleCases = listExamples()
