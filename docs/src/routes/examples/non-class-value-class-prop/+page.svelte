@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { getBreadcrumbContext } from '$lib/components/contexts/Breadcrumb/Breadcrumb.context'
-    import { getSeoContext } from '$lib/components/contexts/Seo/Seo.context'
-    import { demoCodeSample } from '$lib/demo-loaders'
-    import { exampleSourceUrl } from '$lib/docs-config'
-    import NonClassValueClassProp from '$lib/examples/scoped-props/demos/NonClassValueClassProp.svelte'
+    import { getBreadcrumbContext } from '#lib/components/contexts/Breadcrumb/Breadcrumb.context.js'
+    import { getSeoContext } from '#lib/components/contexts/Seo/Seo.context.js'
+    import { demoCodeSample } from '#lib/demo-loaders.js'
+    import { exampleSourceUrl } from '#lib/docs-config.js'
+    import NonClassValueClassProp from '#lib/examples/scoped-props/demos/NonClassValueClassProp.svelte'
     import {
         CodeReferenceV2,
         ExampleV2,

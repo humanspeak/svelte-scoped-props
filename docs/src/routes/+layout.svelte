@@ -9,7 +9,7 @@
         SeoHead,
         type SeoContext
     } from '@humanspeak/docs-kit'
-    import { docsConfig } from '$lib/docs-config'
+    import { docsConfig } from '#lib/docs-config.js'
     const { children } = $props()
 
     const seo = $state<SeoContext>({})

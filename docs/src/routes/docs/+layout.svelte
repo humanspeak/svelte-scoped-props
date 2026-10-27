@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from '$app/state'
     import { afterNavigate } from '$app/navigation'
-    import { browser } from '$app/environment'
+    import { browser } from '$app/env'
     import posthog from 'posthog-js'
     import {
         HeaderV2,
@@ -14,23 +14,25 @@
         extractHeadings,
         type TocHeading
     } from '@humanspeak/docs-kit'
-    import { docsConfig } from '$lib/docs-config'
-    import favicon from '$lib/assets/logo.svg'
-    import { docsSections, scopedPropsLoveAndRespect } from '$lib/docsNav'
-    import sitemapManifest from '$lib/sitemap-manifest.json'
+
+    import { docsConfig } from '#lib/docs-config.js'
+    import favicon from '#lib/assets/logo.svg'
+    import { docsSections, scopedPropsLoveAndRespect } from '#lib/docsNav.js'
+    import sitemapManifest from '#lib/sitemap-manifest.json'
     import rootPkg from '../../../../package.json'
     import '@fontsource-variable/inter/index.css'
     import '@fontsource-variable/jetbrains-mono/index.css'
 
     const BASE_URL = 'https://scoped.svelte.page'
     const PKG_VERSION = rootPkg.version
-
     const { children, data } = $props()
 
     /** Pretty slug for the brut strip — "/docs" → "index", "/docs/use-spring" → "use-spring". */
     const docSlug = $derived.by(() => {
         const path = page.url.pathname.replace(/\/+$/, '')
+
         if (path === '/docs' || path === '') return 'index'
+
         return path.replace('/docs/', '')
     })
 
@@ -48,7 +50,9 @@
     }
     $effect(() => {
         if (!breadcrumbs) return
+
         const pageTitle = (page.data?.title as string | undefined) || 'Get Started'
+
         breadcrumbs.breadcrumbs = [{ title: 'Docs', href: '/docs' }, { title: pageTitle }]
     })
 
@@ -128,8 +132,11 @@
         if (contentElement) refreshHeadings()
     })
 
-    afterNavigate(() => {
+    afterNavigate(({ shallow, type }) => {
+        if (shallow && type === 'goto') return
+
         requestAnimationFrame(refreshHeadings)
+
         if (browser) {
             posthog.capture('doc_page_viewed', {
                 pathname: page.url.pathname,

@@ -6,7 +6,7 @@
   (arrow keys, Home/End, roving tabindex).
 -->
 <script lang="ts">
-    import { cn, type WithoutChildrenOrChild } from '$lib/shadcn/utils'
+    import { cn, type WithoutChildrenOrChild } from '#lib/shadcn/utils.js'
     import { Tabs as TabsPrimitive, type TabsListProps as BitsTabsListProps } from 'bits-ui'
 
     export type TabsListProps = WithoutChildrenOrChild<BitsTabsListProps>
